@@ -6,13 +6,12 @@
   <title>白手起家：街角創業錄</title>
   <style>
     :root {
-      --bg-app: #f4efe6;
+      --bg-app: #f3ede2;
       --bg-card: #ffffff;
-      --bg-dark: #2c221e;
+      --bg-dark: #261d19;
       --text-main: #2b211c;
       --text-muted: #78685f;
       --accent: #c86d2d;
-      --accent-hover: #a8561d;
       --green: #1f8a5b;
       --green-bg: #e7f6ef;
       --red: #c93b3b;
@@ -20,7 +19,7 @@
       --amber: #b87400;
       --amber-bg: #fff5e0;
       --border: #e4dbd0;
-      --radius: 14px;
+      --radius: 12px;
     }
 
     * {
@@ -32,7 +31,7 @@
     html, body {
       margin: 0;
       padding: 0;
-      background: #e5ddd0;
+      background: #dfd6c7;
       color: var(--text-main);
       font-family: -apple-system, BlinkMacSystemFont, "PingFang TC", "Microsoft JhengHei", sans-serif;
       overscroll-behavior: none;
@@ -41,108 +40,175 @@
 
     #app {
       max-width: 480px;
-      min-height: 100vh;
+      height: 100vh;
       margin: 0 auto;
       background: var(--bg-app);
       display: flex;
       flex-direction: column;
-      box-shadow: 0 0 30px rgba(0,0,0,0.08);
+      overflow: hidden;
+      box-shadow: 0 0 30px rgba(0,0,0,0.12);
       padding-bottom: env(safe-area-inset-bottom);
     }
 
-    /* 頂部狀態欄 HUD */
+    /* 頂部財務狀態欄 HUD */
     header {
       background: var(--bg-dark);
       color: #fff;
-      padding: max(12px, env(safe-area-inset-top)) 14px 12px;
-      position: sticky;
-      top: 0;
-      z-index: 20;
+      padding: max(10px, env(safe-area-inset-top)) 12px 8px;
+      flex-shrink: 0;
     }
 
     .top-bar {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 10px;
+      margin-bottom: 6px;
     }
 
-    .day-badge {
+    .day-info {
       display: flex;
       align-items: center;
       gap: 6px;
+      font-size: 13px;
       font-weight: 700;
-      font-size: 15px;
     }
 
-    .weekend-tag {
+    .tag-weekend {
       background: #e06d24;
-      color: #fff;
-      font-size: 11px;
-      padding: 2px 6px;
-      border-radius: 6px;
+      font-size: 10px;
+      padding: 2px 5px;
+      border-radius: 5px;
     }
 
-    .header-actions {
+    .speed-controls {
       display: flex;
-      gap: 6px;
+      gap: 4px;
     }
 
-    .icon-btn {
+    .spd-btn {
       background: rgba(255,255,255,0.12);
-      border: none;
+      border: 1px solid rgba(255,255,255,0.15);
       color: #fff;
-      padding: 6px 10px;
-      border-radius: 8px;
-      font-size: 12px;
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 700;
       cursor: pointer;
+    }
+    .spd-btn.active {
+      background: var(--accent);
+      border-color: var(--accent);
     }
 
     .hud-grid {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      gap: 6px;
+      gap: 5px;
     }
 
-    .hud-item {
+    .hud-box {
       background: rgba(255,255,255,0.08);
-      padding: 6px 8px;
-      border-radius: 8px;
+      padding: 4px 6px;
+      border-radius: 7px;
     }
 
-    .hud-label {
-      font-size: 10px;
+    .hud-lbl {
+      font-size: 9px;
       color: #cbbcb3;
       display: block;
     }
 
     .hud-val {
-      font-size: 13px;
-      font-weight: 700;
-      margin-top: 2px;
+      font-size: 12px;
+      font-weight: 800;
+      margin-top: 1px;
       display: block;
     }
-
     .hud-val.danger { color: #ff7b7b; }
     .hud-val.good { color: #6ee7b7; }
 
-    /* 債務與狀態列 */
+    /* 動態視覺舞台區 */
+    .stage-wrap {
+      position: relative;
+      width: 100%;
+      height: 215px;
+      background: #3b2d26;
+      flex-shrink: 0;
+      border-bottom: 2px solid #261d19;
+    }
+
+    #shop-canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .clock-overlay {
+      position: absolute;
+      top: 8px;
+      left: 10px;
+      background: rgba(28, 21, 18, 0.82);
+      color: #fff;
+      padding: 4px 9px;
+      border-radius: 99px;
+      font-size: 11px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      backdrop-filter: blur(4px);
+    }
+
+    .rush-badge {
+      background: #dc2626;
+      color: #fff;
+      font-size: 9px;
+      padding: 1px 5px;
+      border-radius: 4px;
+      animation: pulse 1s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.55; }
+    }
+
+    .stage-tools {
+      position: absolute;
+      top: 8px;
+      right: 10px;
+      display: flex;
+      gap: 5px;
+    }
+
+    .mini-pill-btn {
+      background: rgba(28, 21, 18, 0.82);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,0.2);
+      padding: 4px 8px;
+      border-radius: 99px;
+      font-size: 11px;
+      cursor: pointer;
+    }
+
+    /* 狀態 Buff/Debuff 橫條 */
     .status-strip {
-      background: #3a2d28;
-      padding: 6px 14px;
+      background: #362923;
+      padding: 5px 10px;
       display: flex;
       gap: 6px;
       overflow-x: auto;
+      flex-shrink: 0;
       scrollbar-width: none;
     }
     .status-strip::-webkit-scrollbar { display: none; }
 
     .pill {
-      font-size: 11px;
-      padding: 3px 8px;
+      font-size: 10px;
+      padding: 2px 7px;
       border-radius: 99px;
       white-space: nowrap;
-      font-weight: 600;
+      font-weight: 700;
       cursor: pointer;
     }
     .pill.BUFF { background: var(--green-bg); color: var(--green); }
@@ -150,139 +216,145 @@
     .pill.MIXED { background: var(--amber-bg); color: var(--amber); }
     .pill.DEBT { background: #7f1d1d; color: #fecaca; }
 
-    /* 主內容區 */
-    main {
+    /* 下半部即時操作區 */
+    .control-panel {
       flex: 1;
-      padding: 12px 14px 90px;
+      overflow-y: auto;
+      padding: 10px 12px 24px;
     }
 
-    /* 分頁導覽 */
-    .tabs {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      background: #e6ddd1;
-      padding: 4px;
-      border-radius: 12px;
-      margin-bottom: 12px;
-    }
-
-    .tab-btn {
-      border: none;
-      background: transparent;
-      padding: 8px 4px;
-      border-radius: 9px;
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--text-muted);
-      cursor: pointer;
-    }
-
-    .tab-btn.active {
-      background: #fff;
-      color: var(--text-main);
-      box-shadow: 0 2px 6px rgba(0,0,0,0.06);
-    }
-
-    /* 卡片樣式 */
-    .card {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 12px;
-      margin-bottom: 10px;
-    }
-
-    .card-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      margin-bottom: 6px;
-    }
-
-    .card-title {
-      font-weight: 700;
-      font-size: 15px;
-    }
-
-    .badge {
-      font-size: 11px;
-      padding: 2px 7px;
-      border-radius: 6px;
-      font-weight: 600;
-    }
-    .badge-perish { background: var(--amber-bg); color: var(--amber); }
-    .badge-keep { background: var(--green-bg); color: var(--green); }
-
-    .meta-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      font-size: 12px;
-      color: var(--text-muted);
-      margin-bottom: 10px;
-    }
-
-    /* 定價策略列 */
-    .price-strategy {
+    /* 即時定價策略條 */
+    .price-bar {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 6px;
-      margin-top: 8px;
+      margin-bottom: 10px;
     }
 
-    .strat-btn {
-      border: 1px solid var(--border);
-      background: #faf7f2;
-      padding: 8px 4px;
-      border-radius: 10px;
-      font-size: 12px;
+    .price-opt {
+      background: #fff;
+      border: 1.5px solid var(--border);
+      border-radius: 9px;
+      padding: 6px 4px;
       text-align: center;
+      font-size: 11px;
       cursor: pointer;
     }
-
-    .strat-btn.active {
+    .price-opt.active {
       border-color: var(--accent);
       background: #fff3eb;
       color: var(--accent);
       font-weight: 700;
     }
 
-    /* 備貨控制器 */
-    .qty-controls {
+    /* 分頁按鈕 */
+    .tabs {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      background: #e4dbd0;
+      padding: 3px;
+      border-radius: 10px;
+      margin-bottom: 10px;
+    }
+
+    .tab-btn {
+      border: none;
+      background: transparent;
+      padding: 7px 4px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-muted);
+      cursor: pointer;
+    }
+    .tab-btn.active {
+      background: #fff;
+      color: var(--text-main);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.06);
+    }
+
+    /* 商品與設備卡片 */
+    .card {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 10px 12px;
+      margin-bottom: 8px;
+    }
+
+    .card-top {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      background: #faf7f2;
-      padding: 6px 10px;
-      border-radius: 10px;
+      margin-bottom: 5px;
     }
 
-    .btn-group {
-      display: flex;
-      align-items: center;
-      gap: 6px;
+    .card-title {
+      font-weight: 800;
+      font-size: 14px;
     }
 
-    .step-btn {
-      min-width: 34px;
-      height: 32px;
-      border: 1px solid var(--border);
-      background: #fff;
-      border-radius: 8px;
+    .badge {
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 5px;
       font-weight: 700;
-      font-size: 13px;
+    }
+    .badge-perish { background: var(--amber-bg); color: var(--amber); }
+    .badge-keep { background: var(--green-bg); color: var(--green); }
+
+    .meta-line {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    .stock-bar-wrap {
+      background: #ede5da;
+      height: 6px;
+      border-radius: 99px;
+      overflow: hidden;
+      margin-bottom: 8px;
+    }
+    .stock-bar-fill {
+      height: 100%;
+      background: var(--green);
+      transition: width 0.2s;
+    }
+    .stock-bar-fill.low { background: var(--red); }
+
+    .restock-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .buy-btns {
+      display: flex;
+      gap: 5px;
+    }
+
+    .chip-btn {
+      background: #faf6f0;
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      padding: 5px 9px;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-main);
       cursor: pointer;
     }
-    .step-btn:active { background: #eee; }
-
-    .qty-display {
-      min-width: 36px;
-      text-align: center;
-      font-weight: 700;
-      font-size: 15px;
+    .chip-btn:active {
+      background: var(--accent);
+      color: #fff;
+    }
+    .chip-btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
     }
 
-    /* 設備與購買按鈕 */
     .action-btn {
       width: 100%;
       padding: 10px;
@@ -291,46 +363,17 @@
       background: var(--accent);
       color: #fff;
       font-weight: 700;
-      font-size: 14px;
+      font-size: 13px;
       cursor: pointer;
     }
-    .action-btn:disabled {
-      background: #cbbcb3;
-      cursor: not-allowed;
-    }
-    .action-btn.secondary {
-      background: #4b3e37;
-    }
-
-    /* 底部固定開工列 */
-    .bottom-dock {
-      position: fixed;
-      bottom: 0;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 100%;
-      max-width: 480px;
-      background: #fff;
-      border-top: 1px solid var(--border);
-      padding: 10px 14px max(10px, env(safe-area-inset-bottom));
-      z-index: 15;
-    }
-
-    .dock-summary {
-      display: flex;
-      justify-content: space-between;
-      font-size: 12px;
-      margin-bottom: 8px;
-      color: var(--text-muted);
-    }
-
-    .warn-text { color: var(--red); font-weight: 700; }
+    .action-btn:disabled { background: #cbbcb3; cursor: not-allowed; }
+    .action-btn.secondary { background: #4b3e37; }
 
     /* 彈窗 Modal */
     .modal-backdrop {
       position: fixed;
       inset: 0;
-      background: rgba(25, 18, 14, 0.72);
+      background: rgba(22, 16, 12, 0.75);
       display: none;
       align-items: center;
       justify-content: center;
@@ -342,63 +385,35 @@
     .modal-box {
       background: #fff;
       width: 100%;
-      max-width: 430px;
+      max-width: 420px;
       max-height: 88vh;
       overflow-y: auto;
-      border-radius: 18px;
+      border-radius: 16px;
       padding: 18px;
-      box-shadow: 0 20px 40px rgba(0,0,0,0.25);
     }
 
     .modal-title {
-      font-size: 18px;
+      font-size: 17px;
       font-weight: 800;
       margin: 0 0 8px;
     }
 
-    /* 損益表表格 */
     .pnl-row {
       display: flex;
       justify-content: space-between;
-      padding: 7px 0;
+      padding: 6px 0;
       border-bottom: 1px dashed var(--border);
-      font-size: 13px;
+      font-size: 12px;
     }
     .pnl-row.total {
       border-top: 2px solid var(--text-main);
       border-bottom: none;
       font-weight: 800;
-      font-size: 16px;
+      font-size: 15px;
       margin-top: 6px;
-      padding-top: 10px;
+      padding-top: 8px;
     }
 
-    /* 營業模擬進度條 */
-    .sim-bar-wrap {
-      background: #eee5d8;
-      height: 14px;
-      border-radius: 99px;
-      overflow: hidden;
-      margin: 12px 0;
-    }
-    .sim-bar-fill {
-      background: var(--accent);
-      height: 100%;
-      width: 0%;
-      transition: width 0.2s linear;
-    }
-    .sim-log {
-      background: #faf7f2;
-      border-radius: 10px;
-      padding: 10px;
-      height: 130px;
-      overflow-y: auto;
-      font-size: 12px;
-      line-height: 1.6;
-      margin-bottom: 12px;
-    }
-
-    /* 難度卡片 */
     .diff-card {
       border: 2px solid var(--border);
       border-radius: 12px;
@@ -408,39 +423,27 @@
     }
     .diff-card:hover { border-color: var(--accent); background: #fffaf5; }
 
-    /* 進度條（通關路線） */
-    .prog-bg {
-      background: #ece4d8;
-      height: 8px;
-      border-radius: 99px;
-      overflow: hidden;
-      margin: 4px 0 8px;
-    }
-    .prog-fill {
-      background: var(--green);
-      height: 100%;
-    }
-
     .toast {
       position: fixed;
-      top: 70px;
+      top: 64px;
       left: 50%;
       transform: translateX(-50%);
-      background: rgba(30, 24, 20, 0.92);
+      background: rgba(25, 20, 16, 0.92);
       color: #fff;
-      padding: 8px 14px;
+      padding: 7px 14px;
       border-radius: 99px;
-      font-size: 12px;
+      font-size: 11px;
       z-index: 80;
       opacity: 0;
       pointer-events: none;
-      transition: opacity 0.25s;
+      transition: opacity 0.2s;
+      white-space: nowrap;
     }
     .toast.show { opacity: 1; }
 
     input[type="text"], textarea {
       width: 100%;
-      padding: 8px 10px;
+      padding: 8px;
       border: 1px solid var(--border);
       border-radius: 8px;
       font-size: 12px;
@@ -450,89 +453,85 @@
 </head>
 <body>
 <div id="app">
+  <!-- 頂部核心財務數據 -->
   <header>
     <div class="top-bar">
-      <div class="day-badge">
+      <div class="day-info">
         <span id="ui-day">第 1 日・週一</span>
-        <span id="ui-weekend" class="weekend-tag" style="display:none;">週末旺季</span>
-        <span id="ui-stores" style="font-size:12px;color:#e2c6a8;">🏠 1間店</span>
+        <span id="ui-weekend" class="tag-weekend" style="display:none;">週末旺季</span>
+        <span id="ui-stores" style="font-size:11px;color:#e2c6a8;">🏠 1間店</span>
       </div>
-      <div class="header-actions">
-        <button class="icon-btn" onclick="UI.openEndings()">🎯 版圖</button>
-        <button class="icon-btn" onclick="UI.openSettings()">⚙️ 設定</button>
+      <div class="speed-controls">
+        <button class="spd-btn" id="spd-0" onclick="Game.setSpeed(0)">⏸</button>
+        <button class="spd-btn active" id="spd-1" onclick="Game.setSpeed(1)">1x</button>
+        <button class="spd-btn" id="spd-2" onclick="Game.setSpeed(2)">2x</button>
       </div>
     </div>
     <div class="hud-grid">
-      <div class="hud-item">
-        <span class="hud-label">可用現金</span>
+      <div class="hud-box">
+        <span class="hud-lbl">可用現金</span>
         <span class="hud-val" id="ui-cash">$8,000</span>
       </div>
-      <div class="hud-item">
-        <span class="hud-label">預計毛利率</span>
-        <span class="hud-val" id="ui-margin">0%</span>
+      <div class="hud-box">
+        <span class="hud-lbl">今日營業額</span>
+        <span class="hud-val good" id="ui-today-rev">$0</span>
       </div>
-      <div class="hud-item">
-        <span class="hud-label">盈虧平衡點</span>
-        <span class="hud-val" id="ui-breakeven">$350</span>
+      <div class="hud-box">
+        <span class="hud-lbl">今日固定開支</span>
+        <span class="hud-val" id="ui-fixed-opex">$350</span>
       </div>
-      <div class="hud-item">
-        <span class="hud-label">店鋪口碑</span>
+      <div class="hud-box">
+        <span class="hud-lbl">店鋪口碑</span>
         <span class="hud-val" id="ui-rep">50 / 100</span>
       </div>
     </div>
   </header>
 
-  <!-- 債務與Buff/Debuff狀態列 -->
+  <!-- 動態店鋪視覺舞台 -->
+  <div class="stage-wrap">
+    <canvas id="shop-canvas"></canvas>
+    <div class="clock-overlay">
+      <span id="ui-clock">🕒 08:00</span>
+      <span id="ui-rush" class="rush-badge" style="display:none;">🔥 繁忙高峰</span>
+    </div>
+    <div class="stage-tools">
+      <button class="mini-pill-btn" onclick="UI.openEndings()">🎯 版圖</button>
+      <button class="mini-pill-btn" onclick="UI.openSettings()">⚙️ 設定</button>
+    </div>
+  </div>
+
+  <!-- 狀態 Buff / Debuff 列 -->
   <div class="status-strip" id="ui-status-strip"></div>
 
-  <main>
-    <!-- 盤前資訊提示卡 -->
-    <div class="card" style="background:#fffaf3; border-color:#ead9c3;">
-      <div style="display:flex; justify-content:space-between; align-items:center;">
-        <strong style="font-size:13px;">📊 今日市場與產能預估</strong>
-        <span id="ui-contract-badge" class="badge badge-perish" style="display:none;">已接大單</span>
+  <!-- 下半部即時操作面板 -->
+  <div class="control-panel">
+    <!-- 即時調價 -->
+    <div class="price-bar">
+      <div class="price-opt" id="strat-0.85" onclick="Game.setPriceMult(0.85)">
+        🏷️ 薄利促銷 (85%)<br><small style="color:var(--text-muted)">吸引更多街客入店</small>
       </div>
-      <div style="font-size:12px; color:var(--text-muted); margin-top:6px; line-height:1.5;" id="ui-forecast-text">
-        預計自然客流：約 35 人｜設備總產能：40 點
+      <div class="price-opt active" id="strat-1" onclick="Game.setPriceMult(1)">
+        ⚖️ 標準定價 (100%)<br><small style="color:var(--text-muted)">客流與毛利平衡</small>
       </div>
-      <div class="price-strategy">
-        <div class="strat-btn" id="strat-0.85" onclick="Game.setPriceMult(0.85)">
-          薄利促銷<br><small>售價85%｜客流+20%</small>
-        </div>
-        <div class="strat-btn active" id="strat-1" onclick="Game.setPriceMult(1)">
-          標準定價<br><small>售價100%｜正常客流</small>
-        </div>
-        <div class="strat-btn" id="strat-1.15" onclick="Game.setPriceMult(1.15)">
-          精品溢價<br><small>售價115%｜客流-18%</small>
-        </div>
+      <div class="price-opt" id="strat-1.15" onclick="Game.setPriceMult(1.15)">
+        👑 精品溢價 (115%)<br><small style="color:var(--text-muted)">減緩排隊提升毛利</small>
       </div>
     </div>
 
-    <!-- 三大分頁 -->
+    <!-- 分頁導覽 -->
     <div class="tabs">
-      <button class="tab-btn active" id="tab-btn-prep" onclick="UI.switchTab('prep')">📦 備貨與毛利</button>
+      <button class="tab-btn active" id="tab-btn-stock" onclick="UI.switchTab('stock')">📦 即時補貨</button>
       <button class="tab-btn" id="tab-btn-equip" onclick="UI.switchTab('equip')">🛠️ 設備與擴張</button>
-      <button class="tab-btn" id="tab-btn-ledger" onclick="UI.switchTab('ledger')">🧾 經營紀錄</button>
+      <button class="tab-btn" id="tab-btn-ledger" onclick="UI.switchTab('ledger')">🧾 損益流水</button>
     </div>
 
-    <div id="tab-prep"></div>
+    <div id="tab-stock"></div>
     <div id="tab-equip" style="display:none;"></div>
     <div id="tab-ledger" style="display:none;"></div>
-  </main>
-
-  <!-- 底部開工結算欄 -->
-  <div class="bottom-dock">
-    <div class="dock-summary">
-      <span>備貨開支：<strong id="ui-prep-cost">$0</strong></span>
-      <span>產能負荷：<strong id="ui-cap-usage">0 / 40</strong></span>
-    </div>
-    <button class="action-btn" id="btn-start-day" onclick="Game.startOperatingDay()">
-      🚀 扣減備貨費並開始今日營業
-    </button>
   </div>
 </div>
 
-<!-- 通用彈窗容器 -->
+<!-- 彈窗容器 -->
 <div class="modal-backdrop" id="modal-backdrop">
   <div class="modal-box" id="modal-content"></div>
 </div>
@@ -547,7 +546,6 @@
  */
 const DEFAULT_GAS_URL = "https://script.google.com/macros/s/AKfycbwCv-vqgM5Rnpzp22i1dHMmF8j65ajcXgtcH5py9VzB9el85Y6DXZwmqlwtjUgXCnWy/exec"; // <-- 將你嘅 https://script.google.com/macros/s/....../exec 貼喺引號入面
 
-// 內置保底數值庫（與你 Google Sheet JSON 結構 100% 一致，確保離線秒開機）
 const FALLBACK_CONFIG = {
   meta: {
     config_version: "1.0.0",
@@ -585,7 +583,7 @@ const FALLBACK_CONFIG = {
   decisionCards: [
     { card_id: "card_01", title: "美食博主探店邀約", desc: "擁有十萬粉絲嘅本地博主提出免費試食換取推薦貼文。", min_day: 4, opt_a_text: "免費招待（現金 -$400，獲得 2 日網紅熱潮）", opt_a_effect: "CASH:-400;STATUS:st_kol_hype", opt_b_text: "婉拒合作，專注日常營運", opt_b_effect: "NONE" },
     { card_id: "card_02", title: "咖啡豆商清倉特賣", desc: "批發商有一批即期優質咖啡豆以六折出清，但只能今日使用。", min_day: 4, opt_a_text: "斥資 $800 掃貨（今日原料成本 -35%）", opt_a_effect: "CASH:-800;TEMP_COST:0.65", opt_b_text: "按原價正常入貨，保持穩健", opt_b_effect: "NONE" },
-    { card_id: "card_03", title: "寫字樓下午茶急單", desc: "附近公司臨時需要大量下午茶，準時交貨有豐厚獎金。", min_day: 6, opt_a_text: "接下大單（今日需額外消耗 30 產能，達標獎 +$2200）", opt_a_effect: "CONTRACT:30:2200:800", opt_b_text: "產能吃緊，放棄今次訂單", opt_b_effect: "NONE" }
+    { card_id: "card_03", title: "寫字樓下午茶急單", desc: "附近公司臨時需要大量下午茶，準時交貨有豐厚獎金。", min_day: 6, opt_a_text: "接下急單（今日需額外應付企業外賣，達標獎 +$2200）", opt_a_effect: "CONTRACT:8:2200:800", opt_b_text: "人手吃緊，放棄今次訂單", opt_b_effect: "NONE" }
   ],
   endings: [
     { ending_id: "end_artisan", title: "匠心傳奇・精品名店", desc: "堅守單店品質，以極高口碑與毛利率成為城市地標。", req_stores: 1, req_cash: 100000, req_rep: 95, req_margin: 0.65, max_day: 999, req_total_rev: 0 },
@@ -594,13 +592,20 @@ const FALLBACK_CONFIG = {
   ]
 };
 
+const PROD_ICONS = {
+  prod_01: "☕",
+  prod_02: "🥛",
+  prod_03: "🥐",
+  prod_04: "✨"
+};
+
 /**
  * ============================================================
- * 2. ConfigLoader：本地快取優先 + 背景 GAS 同步
+ * 2. ConfigLoader & SaveManager
  * ============================================================
  */
 const ConfigLoader = {
-  CACHE_KEY: "startup_game_config_cache_v1",
+  CACHE_KEY: "startup_game_rt_cache_v1",
   URL_KEY: "startup_game_gas_url",
   current: JSON.parse(JSON.stringify(FALLBACK_CONFIG)),
 
@@ -613,15 +618,10 @@ const ConfigLoader = {
   },
 
   init(onUpdated) {
-    // 1. 立即讀取本地快取（0ms 啟動）
     const cached = localStorage.getItem(this.CACHE_KEY);
     if (cached) {
-      try {
-        this.current = JSON.parse(cached);
-      } catch (e) { console.warn("快取解析失敗，改用保底數值"); }
+      try { this.current = JSON.parse(cached); } catch (e) {}
     }
-
-    // 2. 背景非同步向 Google Sheet GAS 拉取最新數值
     const gasUrl = this.getGasUrl();
     if (!gasUrl) return;
 
@@ -633,74 +633,433 @@ const ConfigLoader = {
           this.current = data;
           localStorage.setItem(this.CACHE_KEY, JSON.stringify(data));
           if (oldVer !== data.meta.config_version) {
-            UI.showToast(`已同步最新遊戲數值表 v${data.meta.config_version}`);
+            UI.showToast(`已同步最新數值表 v${data.meta.config_version}`);
           }
           if (onUpdated) onUpdated();
         }
       })
-      .catch(err => console.warn("背景同步 GAS 失敗（將繼續使用本地快取）：", err));
+      .catch(() => {});
   }
 };
 
-/**
- * ============================================================
- * 3. SaveManager：解耦存檔管理（方便日後轉 Capacitor 原生儲存）
- * ============================================================
- */
 const SaveManager = {
-  SAVE_KEY: "startup_game_save_v1",
-
+  SAVE_KEY: "startup_game_rt_save_v1",
   load() {
-    const raw = localStorage.getItem(this.SAVE_KEY);
-    if (!raw) return null;
-    try {
-      return JSON.parse(raw);
-    } catch (e) {
-      return null;
-    }
+    try { return JSON.parse(localStorage.getItem(this.SAVE_KEY)); } catch (e) { return null; }
   },
-
   save(state) {
-    state.updatedAt = Date.now();
     localStorage.setItem(this.SAVE_KEY, JSON.stringify(state));
   },
-
   clear() {
     localStorage.removeItem(this.SAVE_KEY);
   },
-
   exportCode(state) {
     return btoa(encodeURIComponent(JSON.stringify(state)));
   },
-
   importCode(code) {
     try {
       const obj = JSON.parse(decodeURIComponent(atob(code.trim())));
-      if (!obj || typeof obj.cash !== "number" || !obj.day) throw new Error("格式錯誤");
+      if (!obj || typeof obj.cash !== "number") throw new Error();
       this.save(obj);
       return obj;
-    } catch (e) {
-      return null;
-    }
+    } catch (e) { return null; }
   }
 };
 
 /**
  * ============================================================
- * 4. Game：核心商業模擬引擎
+ * 3. VisualStage：HTML5 Canvas 實時動態店鋪引擎
+ * ============================================================
+ */
+const VisualStage = {
+  canvas: null,
+  ctx: null,
+  width: 0,
+  height: 215,
+  machines: [],      // 吧台上的機器實體 [{ equip_id, name, capacity, busyCustomer, progress, duration }]
+  customers: [],     // 店內與街上嘅客人實體
+  floatTexts: [],    // 飄浮金額/口碑提示 [{ text, x, y, color, alpha, life }]
+  passersby: [],     // 街外路過行人
+
+  init() {
+    this.canvas = document.getElementById("shop-canvas");
+    this.ctx = this.canvas.getContext("2d");
+    this.resize();
+    window.addEventListener("resize", () => this.resize());
+  },
+
+  resize() {
+    const rect = this.canvas.parentElement.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    this.width = rect.width;
+    this.height = rect.height;
+    this.canvas.width = this.width * dpr;
+    this.canvas.height = this.height * dpr;
+    this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  },
+
+  syncMachinesFromState() {
+    if (!Game.state) return;
+    const owned = Game.state.equipmentOwned;
+    const desiredList = [];
+    ConfigLoader.current.equipment.forEach(eq => {
+      const count = owned[eq.equip_id] || 0;
+      for (let i = 0; i < count; i++) {
+        desiredList.push(eq);
+      }
+    });
+
+    // 保留現有機器進度，新增新買機器
+    while (this.machines.length < desiredList.length) {
+      const eq = desiredList[this.machines.length];
+      this.machines.push({
+        equip_id: eq.equip_id,
+        name: eq.name,
+        capacity: Number(eq.daily_capacity),
+        busyCustomer: null,
+        progress: 0,
+        duration: 2.0
+      });
+    }
+  },
+
+  resetForNewDay() {
+    this.customers = [];
+    this.floatTexts = [];
+    this.machines.forEach(m => {
+      m.busyCustomer = null;
+      m.progress = 0;
+    });
+  },
+
+  addFloatText(text, x, y, color = "#4ade80") {
+    this.floatTexts.push({ text, x, y, color, life: 1.3 });
+  },
+
+  spawnCustomer(product) {
+    const colors = ["#f87171", "#60a5fa", "#fbbf24", "#a78bfa", "#34d399", "#f472b6"];
+    this.customers.push({
+      id: Math.random(),
+      product,
+      state: "WALK_IN", // WALK_IN -> QUEUE -> BREWING -> LEAVE_HAPPY / LEAVE_ANGRY
+      x: 24,
+      y: 185,
+      targetX: 80,
+      targetY: 135,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      patience: 14,     // 最多排隊等 14 秒
+      maxPatience: 14,
+      moodIcon: PROD_ICONS[product.prod_id] || "☕"
+    });
+  },
+
+  update(dt) {
+    if (!Game.state) return;
+    const w = this.width;
+
+    // 1. 街外行人偶爾經過
+    if (Math.random() < dt * 0.6 && this.passersby.length < 4) {
+      const fromLeft = Math.random() < 0.5;
+      this.passersby.push({
+        x: fromLeft ? -15 : w + 15,
+        y: 194 + (Math.random() * 10 - 5),
+        vx: fromLeft ? (28 + Math.random() * 15) : -(28 + Math.random() * 15),
+        color: "#9ca3af"
+      });
+    }
+    this.passersby.forEach(p => p.x += p.vx * dt);
+    this.passersby = this.passersby.filter(p => p.x > -30 && p.x < w + 30);
+
+    // 2. 排隊隊伍位置計算
+    const queueCustomers = this.customers.filter(c => c.state === "QUEUE" || c.state === "BREWING");
+    queueCustomers.forEach((c, idx) => {
+      c.targetX = 85 + idx * 34;
+      c.targetY = 132;
+    });
+
+    // 3. 更新每位客人狀態
+    this.customers.forEach(c => {
+      if (c.state === "WALK_IN") {
+        c.targetX = 85 + queueCustomers.length * 34;
+        c.targetY = 132;
+        this.moveTowards(c, c.targetX, c.targetY, 75 * dt);
+        if (Math.hypot(c.x - c.targetX, c.y - c.targetY) < 4) {
+          c.state = "QUEUE";
+        }
+      } else if (c.state === "QUEUE") {
+        this.moveTowards(c, c.targetX, c.targetY, 60 * dt);
+        c.patience -= dt;
+
+        // 排頭位或前三位可以配對空閒機器
+        const qIndex = queueCustomers.indexOf(c);
+        if (qIndex >= 0 && qIndex < this.machines.length) {
+          // 檢查庫存
+          const stock = Game.state.inventory[c.product.prod_id] || 0;
+          if (stock <= 0) {
+            // 斷貨！
+            c.state = "LEAVE_ANGRY";
+            c.moodIcon = "❌沽清";
+            Game.onCustomerFail("STOCKOUT");
+            this.addFloatText("沽清! -1口碑", c.x, c.y - 24, "#f87171");
+            return;
+          }
+          // 尋找空閒機器
+          const freeMachine = this.machines.find(m => !m.busyCustomer);
+          if (freeMachine) {
+            // 扣減庫存並開始製作
+            Game.state.inventory[c.product.prod_id] -= 1;
+            UI.renderStockTab();
+            c.state = "BREWING";
+            freeMachine.busyCustomer = c;
+            freeMachine.progress = 0;
+            // 製作時間公式：daily_capacity 40 -> 基礎約 1.5s * prep_load
+            const speedFactor = Math.max(0.5, freeMachine.capacity / 45);
+            freeMachine.duration = Math.max(0.8, (Number(c.product.prep_load) * 1.6) / speedFactor);
+          }
+        }
+
+        if (c.state === "QUEUE" && c.patience <= 0) {
+          c.state = "LEAVE_ANGRY";
+          c.moodIcon = "💢等太耐";
+          Game.onCustomerFail("QUEUE");
+          this.addFloatText("等太耐! -1口碑", c.x, c.y - 24, "#f87171");
+        }
+      } else if (c.state === "BREWING") {
+        this.moveTowards(c, c.targetX, c.targetY, 60 * dt);
+      } else if (c.state === "LEAVE_HAPPY" || c.state === "LEAVE_ANGRY") {
+        this.moveTowards(c, w + 30, 185, 85 * dt);
+      }
+    });
+
+    this.customers = this.customers.filter(c => c.x < w + 22);
+
+    // 4. 更新吧台機器沖煮進度
+    this.machines.forEach(m => {
+      if (m.busyCustomer) {
+        m.progress += dt;
+        if (m.progress >= m.duration) {
+          const cust = m.busyCustomer;
+          m.busyCustomer = null;
+          m.progress = 0;
+          if (cust && cust.state === "BREWING") {
+            cust.state = "LEAVE_HAPPY";
+            cust.moodIcon = "😋";
+            const earned = Game.onCustomerServed(cust.product);
+            this.addFloatText(`+$${earned}`, cust.x, cust.y - 26, "#4ade80");
+          }
+        }
+      }
+    });
+
+    // 5. 更新飄浮文字
+    this.floatTexts.forEach(ft => {
+      ft.y -= 22 * dt;
+      ft.life -= dt;
+    });
+    this.floatTexts = this.floatTexts.filter(ft => ft.life > 0);
+  },
+
+  moveTowards(obj, tx, ty, step) {
+    const dx = tx - obj.x;
+    const dy = ty - obj.y;
+    const dist = Math.hypot(dx, dy);
+    if (dist <= step) {
+      obj.x = tx;
+      obj.y = ty;
+    } else {
+      obj.x += (dx / dist) * step;
+      obj.y += (dy / dist) * step;
+    }
+  },
+
+  draw() {
+    if (!this.ctx) return;
+    const ctx = this.ctx;
+    const w = this.width;
+    const h = this.height;
+
+    ctx.clearRect(0, 0, w, h);
+
+    // 1. 店內背景牆面（暖木色）
+    ctx.fillStyle = "#f5ead8";
+    ctx.fillRect(0, 0, w, 162);
+
+    // 牆面裝飾橫條與餐牌
+    ctx.fillStyle = "#e3d2b9";
+    ctx.fillRect(0, 42, w, 6);
+
+    // 牆上價目黑板
+    ctx.fillStyle = "#2c3531";
+    this.roundRect(ctx, 16, 48, 76, 36, 5, true);
+    ctx.fillStyle = "#f3f4f6";
+    ctx.font = "bold 9px sans-serif";
+    ctx.fillText("☕ 精品手沖", 24, 62);
+    ctx.fillStyle = "#fbbf24";
+    ctx.fillText(`口碑 ★${Game.state ? Game.state.reputation : 50}`, 24, 75);
+
+    // 盆栽裝飾（隨口碑增加）
+    this.drawPlant(ctx, w - 28, 78);
+    if (Game.state && Game.state.reputation >= 65) {
+      this.drawPlant(ctx, 104, 78);
+    }
+
+    // 2. 咖啡吧台（木質櫃台）
+    ctx.fillStyle = "#8c583a";
+    ctx.fillRect(12, 86, w - 24, 24);
+    ctx.fillStyle = "#5c3824";
+    ctx.fillRect(12, 106, w - 24, 6);
+
+    // 3. 繪製吧台上的機器與實時沖煮進度條
+    const maxVisible = Math.min(this.machines.length, 6);
+    const slotW = Math.min(56, (w - 40) / Math.max(1, maxVisible));
+    for (let i = 0; i < maxVisible; i++) {
+      const m = this.machines[i];
+      const mx = 22 + i * slotW;
+      const my = 66;
+
+      // 機身
+      ctx.fillStyle = m.equip_id === "eq_04" ? "#3b82f6" : m.equip_id === "eq_02" ? "#d97706" : m.equip_id === "eq_03" ? "#6b7280" : "#4b5563";
+      this.roundRect(ctx, mx, my, 32, 22, 4, true);
+
+      // 狀態指示燈
+      ctx.fillStyle = m.busyCustomer ? "#fbbf24" : "#34d399";
+      ctx.beginPath();
+      ctx.arc(mx + 26, my + 6, 2.5, 0, Math.PI * 2);
+      ctx.fill();
+
+      // 沖煮中進度條
+      if (m.busyCustomer) {
+        const pct = Math.min(1, m.progress / m.duration);
+        ctx.fillStyle = "#1f2937";
+        ctx.fillRect(mx, my - 8, 32, 5);
+        ctx.fillStyle = "#4ade80";
+        ctx.fillRect(mx, my - 8, 32 * pct, 5);
+      }
+    }
+
+    // 4. 店內木地板
+    ctx.fillStyle = "#e8d8c0";
+    ctx.fillRect(0, 112, w, 50);
+
+    // 5. 玻璃門框與室外人行道
+    ctx.fillStyle = "#6b7280";
+    ctx.fillRect(0, 162, w, 53);
+    ctx.fillStyle = "#9ca3af";
+    ctx.fillRect(0, 162, w, 4);
+
+    // 店門入口標示
+    ctx.fillStyle = "#1f8a5b";
+    ctx.fillRect(10, 158, 36, 8);
+    ctx.fillStyle = "#fff";
+    ctx.font = "bold 8px sans-serif";
+    ctx.fillText("OPEN", 17, 165);
+
+    // 6. 街外路人
+    this.passersby.forEach(p => {
+      this.drawPerson(ctx, p.x, p.y, p.color, null, 1);
+    });
+
+    // 7. 店內客人與頭頂氣泡
+    this.customers.forEach(c => {
+      const patRatio = c.state === "QUEUE" ? Math.max(0, c.patience / c.maxPatience) : 1;
+      this.drawPerson(ctx, c.x, c.y, c.color, c.moodIcon, patRatio, c.state === "QUEUE");
+    });
+
+    // 8. 飄浮金額/口碑文字
+    this.floatTexts.forEach(ft => {
+      ctx.globalAlpha = Math.min(1, ft.life);
+      ctx.font = "bold 12px sans-serif";
+      ctx.fillStyle = "#1c1917";
+      ctx.fillText(ft.text, ft.x - 14, ft.y + 1);
+      ctx.fillStyle = ft.color;
+      ctx.fillText(ft.text, ft.x - 15, ft.y);
+      ctx.globalAlpha = 1;
+    });
+  },
+
+  drawPlant(ctx, x, y) {
+    ctx.fillStyle = "#b45309";
+    ctx.fillRect(x - 6, y, 12, 10);
+    ctx.fillStyle = "#16a34a";
+    ctx.beginPath();
+    ctx.arc(x, y - 4, 8, 0, Math.PI * 2);
+    ctx.fill();
+  },
+
+  drawPerson(ctx, x, y, color, bubbleText, patRatio, showPatience = false) {
+    // 身體
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.arc(x, y, 9, 0, Math.PI * 2);
+    ctx.fill();
+    // 頭部
+    ctx.fillStyle = "#fde68a";
+    ctx.beginPath();
+    ctx.arc(x, y - 10, 6.5, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 頭頂需求氣泡
+    if (bubbleText) {
+      ctx.fillStyle = "rgba(255,255,255,0.95)";
+      this.roundRect(ctx, x - 16, y - 34, 32, 16, 6, true);
+      ctx.fillStyle = "#1f2937";
+      ctx.font = "bold 10px sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText(bubbleText, x, y - 22);
+      ctx.textAlign = "left";
+    }
+
+    // 排隊耐性條
+    if (showPatience) {
+      ctx.fillStyle = "#374151";
+      ctx.fillRect(x - 12, y - 39, 24, 3.5);
+      ctx.fillStyle = patRatio > 0.5 ? "#22c55e" : patRatio > 0.25 ? "#f59e0b" : "#ef4444";
+      ctx.fillRect(x - 12, y - 39, 24 * patRatio, 3.5);
+    }
+  },
+
+  roundRect(ctx, x, y, w, h, r, fill) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+    if (fill) ctx.fill();
+  }
+};
+
+/**
+ * ============================================================
+ * 4. Game：實時 60 秒一日模擬核心引擎
  * ============================================================
  */
 const Game = {
   state: null,
-  prepOrder: {},      // 今日新買入嘅備貨數量 { prod_01: 15, ... }
-  priceMult: 1,       // 今日定價倍率 (0.85 / 1 / 1.15)
-  tempCostMult: 1,    // 單日臨時原料折扣（由抉擇卡觸發）
-  activeContract: null, // 今日接下嘅急單 { capNeeded, reward, penalty }
-  cardShownToday: false,
+  speed: 1,               // 0=暫停, 1=正常(60秒1日), 2=兩倍速
+  DAY_DURATION_SEC: 60,   // 現實 60 秒 = 遊戲 1 日 (08:00 - 20:00)
+  dayElapsed: 0,
+  spawnTimer: 0,
+  priceMult: 1,
+  tempCostMult: 1,
+  activeContract: null,
+  lastFrameTime: 0,
+  daySettling: false,
+
+  // 當日即時統計
+  todayStats: {
+    revenue: 0,
+    soldCogs: 0,
+    served: 0,
+    stockouts: 0,
+    queueFails: 0
+  },
 
   WEEKDAYS: ["週一", "週二", "週三", "週四", "週五", "週六", "週日"],
 
   boot() {
+    VisualStage.init();
     ConfigLoader.init(() => {
       if (this.state) UI.renderAll();
     });
@@ -708,12 +1067,13 @@ const Game = {
     const saved = SaveManager.load();
     if (saved && !saved.isGameOver) {
       this.state = saved;
-      this.resetDailyTempState();
-      UI.renderAll();
-      this.checkMorningEvents();
+      this.startMorning(false);
     } else {
       UI.openDifficultyModal();
     }
+
+    this.lastFrameTime = performance.now();
+    requestAnimationFrame((t) => this.loop(t));
   },
 
   startNewGame(diffId) {
@@ -731,145 +1091,168 @@ const Game = {
       remainingDebt: 0,
       dailyLoanRepayment: 0,
       zeroShortageStreak: 0,
-      equipmentOwned: { eq_01: 1 }, // 開局自帶基礎半自動咖啡機
-      inventory: {},               // 耐放品結轉庫存
-      activeStatuses: [],          // [{ status_id, daysLeft }]
-      marginHistory: [],           // 記錄每日毛利率（供通關判定）
-      historyLogs: [],             // 最近 15 日損益摘要
+      equipmentOwned: { eq_01: 1 },
+      inventory: { prod_01: 20, prod_02: 15 }, // 開局贈送首批基礎備貨，方便一入去就睇到客人成交！
+      activeStatuses: [],
+      marginHistory: [],
+      historyLogs: [],
       isGameOver: false
     };
 
-    this.resetDailyTempState();
     SaveManager.save(this.state);
     UI.closeModal();
-    UI.renderAll();
-    UI.showToast(`已開啟「${diff.name}」創業挑戰！`);
+    this.startMorning(true);
+    UI.showToast(`已開啟「${diff.name}」，店鋪開始營業！`);
   },
 
-  resetDailyTempState() {
-    this.prepOrder = {};
-    this.priceMult = 1;
+  startMorning(isBrandNew) {
+    this.dayElapsed = 0;
+    this.spawnTimer = 0.8;
     this.tempCostMult = 1;
     this.activeContract = null;
-    this.cardShownToday = false;
-    (ConfigLoader.current.products || []).forEach(p => {
-      this.prepOrder[p.prod_id] = 0;
-    });
-  },
+    this.daySettling = false;
+    this.todayStats = { revenue: 0, soldCogs: 0, served: 0, stockouts: 0, queueFails: 0 };
 
-  getDifficulty() {
-    const cfg = ConfigLoader.current;
-    return cfg.difficulties.find(d => d.diff_id === this.state.diffId) || cfg.difficulties[1];
-  },
+    VisualStage.syncMachinesFromState();
+    VisualStage.resetForNewDay();
+    UI.renderAll();
 
-  isWeekend() {
-    const weekdayIdx = (this.state.day - 1) % 7;
-    return weekdayIdx >= 4; // 週五(4)、週六(5)、週日(6)
-  },
-
-  getWeekdayName() {
-    return this.WEEKDAYS[(this.state.day - 1) % 7];
-  },
-
-  // 計算當前有效狀態倍率
-  getStatusMultiplier(targetStat) {
-    const cfg = ConfigLoader.current;
-    let mult = 1;
-    this.state.activeStatuses.forEach(active => {
-      const def = cfg.statuses.find(s => s.status_id === active.status_id);
-      if (def && def.target_stat === targetStat) {
-        mult *= Number(def.modifier_val);
+    // 第 4 日起有機會彈出盤前二選一商業抉擇卡
+    if (!isBrandNew && this.state.day >= 4 && (this.state.day % 2 === 0 || Math.random() < 0.5)) {
+      const eligible = ConfigLoader.current.decisionCards.filter(c => Number(c.min_day) <= this.state.day);
+      if (eligible.length > 0) {
+        const card = eligible[Math.floor(Math.random() * eligible.length)];
+        this.setSpeed(0);
+        UI.openDecisionCardModal(card);
+        return;
       }
-    });
-    return mult;
+    }
+    this.setSpeed(1);
   },
 
-  // 計算總設備產能與每日固定開支
-  getFacilityStats() {
-    const cfg = ConfigLoader.current;
-    let totalCapacity = 0;
-    let equipOpex = 0;
+  loop(now) {
+    const rawDt = Math.min(0.1, (now - this.lastFrameTime) / 1000);
+    this.lastFrameTime = now;
 
-    cfg.equipment.forEach(eq => {
-      const count = this.state.equipmentOwned[eq.equip_id] || 0;
-      totalCapacity += Number(eq.daily_capacity) * count;
-      equipOpex += Number(eq.daily_opex) * count;
-    });
+    if (this.state && !this.state.isGameOver && !this.daySettling && this.speed > 0) {
+      const dt = rawDt * this.speed;
+      this.dayElapsed += dt;
 
-    // 網紅熱潮雙刃劍：雙倍設備損耗
-    const hasKolHype = this.state.activeStatuses.some(s => s.status_id === "st_kol_hype");
-    if (hasKolHype) equipOpex *= 2;
+      // 更新時鐘顯示 (08:00 -> 20:00)
+      const progress = Math.min(1, this.dayElapsed / this.DAY_DURATION_SEC);
+      const totalMinutes = Math.floor(8 * 60 + progress * 12 * 60);
+      const hh = String(Math.floor(totalMinutes / 60)).padStart(2, "0");
+      const mm = String(Math.floor((totalMinutes % 60) / 10) * 10).padStart(2, "0");
+      document.getElementById("ui-clock").textContent = `🕒 ${hh}:${mm}`;
 
-    const rent = Number(cfg.meta.base_daily_rent) * this.state.stores;
-    const fixedOpex = rent + equipOpex + this.state.dailyLoanRepayment;
+      const isRush = this.isRushHour(progress);
+      document.getElementById("ui-rush").style.display = isRush ? "inline-block" : "none";
 
-    return { totalCapacity, equipOpex, rent, fixedOpex };
+      // 客人生成計時器
+      this.spawnTimer -= dt;
+      if (this.spawnTimer <= 0 && progress < 0.96) {
+        this.spawnNextCustomer(isRush);
+        const dailyDemand = this.getEstimatedDemand();
+        const avgInterval = this.DAY_DURATION_SEC / Math.max(8, dailyDemand);
+        const rushMult = isRush ? 0.55 : 1.25;
+        this.spawnTimer = avgInterval * rushMult * (0.75 + Math.random() * 0.5);
+      }
+
+      VisualStage.update(dt);
+
+      // 60 秒滿一日，收市結算
+      if (this.dayElapsed >= this.DAY_DURATION_SEC) {
+        this.endOfDaySettlement();
+      }
+    }
+
+    VisualStage.draw();
+    requestAnimationFrame((t) => this.loop(t));
   },
 
-  // 計算單品今日實際進貨單價
-  getAdjustedUnitCost(product) {
-    const statusMult = this.getStatusMultiplier("UNIT_COST");
-    return Math.max(1, Math.round(Number(product.unit_cost) * statusMult * this.tempCostMult));
+  isRushHour(progress) {
+    // 12:00-14:00 (progress 0.33-0.50) 或 15:00-17:00 (progress 0.58-0.75)
+    return (progress >= 0.33 && progress <= 0.50) || (progress >= 0.58 && progress <= 0.75);
   },
 
-  // 計算今日預計客流量
-  getEstimatedDemand() {
-    const cfg = ConfigLoader.current;
-    let demand = Number(cfg.meta.base_daily_demand);
-    // 每多一間分店增加 80% 基礎客流
-    demand *= (1 + (this.state.stores - 1) * 0.8);
-    // 口碑影響（50分為基準，每10分影響 12%）
-    demand *= (1 + (this.state.reputation - 50) * 0.012);
-    // 週末效應
-    if (this.isWeekend()) demand *= Number(cfg.meta.weekend_demand_mult);
-    // 狀態 Buff/Debuff
-    demand *= this.getStatusMultiplier("DEMAND");
-    // 定價策略影響
-    if (this.priceMult < 1) demand *= 1.20;
-    if (this.priceMult > 1) demand *= 0.82;
-
-    return Math.max(5, Math.round(demand));
+  spawnNextCustomer(isRush) {
+    const unlocked = ConfigLoader.current.products.filter(p => Number(p.unlock_day) <= this.state.day);
+    if (unlocked.length === 0) return;
+    // 優先挑選有庫存嘅商品，但保留 25% 機率隨機點單（考驗全品項備貨）
+    const inStock = unlocked.filter(p => (this.state.inventory[p.prod_id] || 0) > 0);
+    const pool = (inStock.length > 0 && Math.random() < 0.75) ? inStock : unlocked;
+    const chosen = pool[Math.floor(Math.random() * pool.length)];
+    VisualStage.spawnCustomer(chosen);
   },
 
-  // 盤前操作：調整備貨量
-  adjustPrep(prodId, delta) {
-    const current = this.prepOrder[prodId] || 0;
-    const next = Math.max(0, current + delta);
-    this.prepOrder[prodId] = next;
-    UI.renderPrepTab();
-    UI.updateDockAndHud();
+  onCustomerServed(product) {
+    const sellPrice = Math.round(Number(product.sell_price) * this.priceMult);
+    const unitCost = this.getAdjustedUnitCost(product);
+    this.state.cash += sellPrice;
+    this.state.totalRevenue += sellPrice;
+    this.todayStats.revenue += sellPrice;
+    this.todayStats.soldCogs += unitCost;
+    this.todayStats.served += 1;
+
+    // 寫字樓急單進度
+    if (this.activeContract && this.activeContract.done < this.activeContract.target) {
+      this.activeContract.done += 1;
+      if (this.activeContract.done === this.activeContract.target) {
+        this.state.cash += this.activeContract.reward;
+        this.todayStats.revenue += this.activeContract.reward;
+        UI.showToast(`🎉 寫字樓急單完成！獎金 +$${this.activeContract.reward}`);
+      }
+    }
+
+    UI.updateHud();
+    return sellPrice;
   },
 
-  setPriceMult(mult) {
-    this.priceMult = mult;
-    document.querySelectorAll(".strat-btn").forEach(el => el.classList.remove("active"));
-    const btn = document.getElementById(`strat-${mult}`);
-    if (btn) btn.classList.add("active");
-    UI.renderPrepTab();
-    UI.updateDockAndHud();
+  onCustomerFail(reason) {
+    if (reason === "STOCKOUT") this.todayStats.stockouts += 1;
+    if (reason === "QUEUE") this.todayStats.queueFails += 1;
+    this.state.reputation = Math.max(0, this.state.reputation - 1);
+    UI.updateHud();
   },
 
-  // 購買設備
-  buyEquipment(equipId) {
+  // 盤中即時補貨
+  restockNow(prodId, qty) {
+    const prod = ConfigLoader.current.products.find(p => p.prod_id === prodId);
+    if (!prod) return;
+    const unitCost = this.getAdjustedUnitCost(prod);
+    const totalCost = unitCost * qty;
+    if (this.state.cash < totalCost) {
+      UI.showToast("可用現金不足以補貨！");
+      return;
+    }
+    this.state.cash -= totalCost;
+    this.state.inventory[prodId] = (this.state.inventory[prodId] || 0) + qty;
+    SaveManager.save(this.state);
+    UI.updateHud();
+    UI.renderStockTab();
+  },
+
+  // 盤中即時添置設備
+  buyEquipmentNow(equipId) {
     const eq = ConfigLoader.current.equipment.find(e => e.equip_id === equipId);
     if (!eq) return;
     const cost = Number(eq.buy_cost);
     if (this.state.cash < cost) {
-      UI.showToast("現金不足，無法購置設備！");
+      UI.showToast("可用現金不足！");
       return;
     }
     this.state.cash -= cost;
     this.state.equipmentOwned[equipId] = (this.state.equipmentOwned[equipId] || 0) + 1;
+    VisualStage.syncMachinesFromState();
     SaveManager.save(this.state);
     UI.renderAll();
-    UI.showToast(`已購入「${eq.name}」！每日產能 +${eq.daily_capacity}`);
+    UI.showToast(`✅ 已添置「${eq.name}」，立即投入吧台運作！`);
   },
 
-  // 開設新分店
-  openNewStore() {
+  openNewStoreNow() {
     const cost = this.getNextStoreCost();
     if (this.state.cash < cost) {
-      UI.showToast("現金不足以支付新分店頂手費與裝修！");
+      UI.showToast("可用現金不足！");
       return;
     }
     this.state.cash -= cost;
@@ -885,305 +1268,215 @@ const Game = {
     return 80000;
   },
 
-  // 盤前商業抉擇卡觸發檢查
-  checkMorningEvents() {
-    if (this.cardShownToday) return;
-    // 第 4 日起，每逢偶數日或 55% 機率彈出二選一抉擇卡
-    if (this.state.day >= 4 && (this.state.day % 2 === 0 || Math.random() < 0.55)) {
-      const eligible = ConfigLoader.current.decisionCards.filter(c => Number(c.min_day) <= this.state.day);
-      if (eligible.length > 0) {
-        const card = eligible[Math.floor(Math.random() * eligible.length)];
-        this.cardShownToday = true;
-        UI.openDecisionCardModal(card);
-      }
-    }
+  setSpeed(spd) {
+    this.speed = spd;
+    [0, 1, 2].forEach(s => {
+      document.getElementById(`spd-${s}`).classList.toggle("active", s === spd);
+    });
+  },
+
+  setPriceMult(mult) {
+    this.priceMult = mult;
+    [0.85, 1, 1.15].forEach(m => {
+      document.getElementById(`strat-${m}`).classList.toggle("active", m === mult);
+    });
+    UI.renderStockTab();
+  },
+
+  getDifficulty() {
+    const cfg = ConfigLoader.current;
+    return cfg.difficulties.find(d => d.diff_id === this.state.diffId) || cfg.difficulties[1];
+  },
+
+  isWeekend() {
+    return ((this.state.day - 1) % 7) >= 4;
+  },
+
+  getWeekdayName() {
+    return this.WEEKDAYS[(this.state.day - 1) % 7];
+  },
+
+  getStatusMultiplier(targetStat) {
+    const cfg = ConfigLoader.current;
+    let mult = 1;
+    this.state.activeStatuses.forEach(active => {
+      const def = cfg.statuses.find(s => s.status_id === active.status_id);
+      if (def && def.target_stat === targetStat) mult *= Number(def.modifier_val);
+    });
+    return mult;
+  },
+
+  getAdjustedUnitCost(product) {
+    const mult = this.getStatusMultiplier("UNIT_COST") * this.tempCostMult;
+    return Math.max(1, Math.round(Number(product.unit_cost) * mult));
+  },
+
+  getFacilityStats() {
+    const cfg = ConfigLoader.current;
+    let totalCapacity = 0;
+    let equipOpex = 0;
+    cfg.equipment.forEach(eq => {
+      const count = this.state.equipmentOwned[eq.equip_id] || 0;
+      totalCapacity += Number(eq.daily_capacity) * count;
+      equipOpex += Number(eq.daily_opex) * count;
+    });
+    if (this.state.activeStatuses.some(s => s.status_id === "st_kol_hype")) equipOpex *= 2;
+    const rent = Number(cfg.meta.base_daily_rent) * this.state.stores;
+    const fixedOpex = rent + equipOpex + this.state.dailyLoanRepayment;
+    return { totalCapacity, equipOpex, rent, fixedOpex };
+  },
+
+  getEstimatedDemand() {
+    const cfg = ConfigLoader.current;
+    let demand = Number(cfg.meta.base_daily_demand);
+    demand *= (1 + (this.state.stores - 1) * 0.8);
+    demand *= (1 + (this.state.reputation - 50) * 0.012);
+    if (this.isWeekend()) demand *= Number(cfg.meta.weekend_demand_mult);
+    demand *= this.getStatusMultiplier("DEMAND");
+    if (this.priceMult < 1) demand *= 1.25;
+    if (this.priceMult > 1) demand *= 0.80;
+    return Math.max(8, Math.round(demand));
   },
 
   applyCardEffect(effectStr) {
-    if (!effectStr || effectStr === "NONE") {
-      UI.closeModal();
-      return;
+    if (effectStr && effectStr !== "NONE") {
+      effectStr.split(";").forEach(part => {
+        const [type, v1, v2, v3] = part.split(":");
+        if (type === "CASH") this.state.cash += Number(v1);
+        if (type === "STATUS") this.addStatus(v1);
+        if (type === "TEMP_COST") this.tempCostMult = Number(v1);
+        if (type === "CONTRACT") {
+          this.activeContract = { target: Number(v1), done: 0, reward: Number(v2), penalty: Number(v3) };
+        }
+      });
     }
-    const parts = effectStr.split(";");
-    parts.forEach(part => {
-      const [type, val1, val2, val3] = part.split(":");
-      if (type === "CASH") {
-        this.state.cash += Number(val1);
-      } else if (type === "STATUS") {
-        this.addStatus(val1);
-      } else if (type === "TEMP_COST") {
-        this.tempCostMult = Number(val1);
-      } else if (type === "CONTRACT") {
-        this.activeContract = {
-          capNeeded: Number(val1),
-          reward: Number(val2),
-          penalty: Number(val3)
-        };
-      }
-    });
     SaveManager.save(this.state);
     UI.closeModal();
     UI.renderAll();
-    UI.showToast("已執行商業決策！");
+    this.setSpeed(1);
   },
 
   addStatus(statusId) {
     const def = ConfigLoader.current.statuses.find(s => s.status_id === statusId);
     if (!def) return;
-    const existing = this.state.activeStatuses.find(s => s.status_id === statusId);
-    if (existing) {
-      existing.daysLeft = Math.max(existing.daysLeft, Number(def.duration_days));
-    } else {
-      this.state.activeStatuses.push({ status_id: statusId, daysLeft: Number(def.duration_days) });
-    }
+    const ex = this.state.activeStatuses.find(s => s.status_id === statusId);
+    if (ex) ex.daysLeft = Math.max(ex.daysLeft, Number(def.duration_days));
+    else this.state.activeStatuses.push({ status_id: statusId, daysLeft: Number(def.duration_days) });
   },
 
-  // 開始今日營業模擬
-  startOperatingDay() {
+  // 20:00 打烊收市結算
+  endOfDaySettlement() {
+    this.daySettling = true;
+    this.setSpeed(0);
+
     const cfg = ConfigLoader.current;
-    // 1. 計算並扣除今日備貨現金支出
-    let prepCashSpent = 0;
-    const availableStock = {};
-    cfg.products.forEach(p => {
-      const qty = this.prepOrder[p.prod_id] || 0;
-      const unitCost = this.getAdjustedUnitCost(p);
-      prepCashSpent += qty * unitCost;
-      availableStock[p.prod_id] = (this.state.inventory[p.prod_id] || 0) + qty;
-    });
-
-    if (prepCashSpent > this.state.cash) {
-      UI.showToast("可用現金唔夠支付今日備貨費，請減少入貨量！");
-      return;
-    }
-
-    this.state.cash -= prepCashSpent;
-    UI.updateDockAndHud();
-
-    // 2. 運行營業結算演算
-    const simResult = this.simulateDaySales(availableStock, prepCashSpent);
-
-    // 3. 播放 3.5 秒動態營業畫面後顯示日結損益表
-    UI.runOperatingAnimation(simResult, () => {
-      this.finalizeDailyPnL(simResult);
-    });
-  },
-
-  simulateDaySales(availableStock, prepCashSpent) {
-    const cfg = ConfigLoader.current;
-    const facility = this.getFacilityStats();
-    const estDemand = this.getEstimatedDemand();
-    // 實際客流有 ±12% 自然波動
-    const actualCustomers = Math.max(4, Math.round(estDemand * (0.88 + Math.random() * 0.24)));
-
-    // 檢查設備突發小故障
-    let breakdownCost = 0;
-    let effectiveCapacity = facility.totalCapacity;
-    cfg.equipment.forEach(eq => {
-      const count = this.state.equipmentOwned[eq.equip_id] || 0;
-      if (count > 0 && Math.random() < Number(eq.breakdown_chance)) {
-        breakdownCost += Math.round(Number(eq.daily_opex) * 1.5);
-        effectiveCapacity = Math.round(effectiveCapacity * 0.85);
-      }
-    });
-
-    // 若接了急單，先預留急單產能
-    let contractSuccess = false;
-    let contractDelta = 0;
-    if (this.activeContract) {
-      if (effectiveCapacity >= this.activeContract.capNeeded) {
-        effectiveCapacity -= this.activeContract.capNeeded;
-        contractSuccess = true;
-        contractDelta = this.activeContract.reward;
-      } else {
-        contractSuccess = false;
-        contractDelta = -this.activeContract.penalty;
-      }
-    }
-
-    let remainingCap = effectiveCapacity;
-    let revenue = 0;
-    let soldCogs = 0;
-    let customersServed = 0;
-    let stockouts = 0;
-    let capacityShortages = 0;
-
-    const unlockedProds = cfg.products.filter(p => Number(p.unlock_day) <= this.state.day);
-    const soldQtyMap = {};
-    unlockedProds.forEach(p => soldQtyMap[p.prod_id] = 0);
-
-    // 模擬每位客人點單
-    for (let i = 0; i < actualCustomers; i++) {
-      // 隨機挑選一款有庫存嘅產品，或隨機點單
-      const inStockProds = unlockedProds.filter(p => availableStock[p.prod_id] > 0);
-      if (inStockProds.length === 0) {
-        stockouts++;
-        continue;
-      }
-      const chosen = inStockProds[Math.floor(Math.random() * inStockProds.length)];
-      const load = Number(chosen.prep_load);
-      if (remainingCap < load) {
-        capacityShortages++;
-        continue;
-      }
-
-      // 成交！
-      remainingCap -= load;
-      availableStock[chosen.prod_id] -= 1;
-      soldQtyMap[chosen.prod_id] += 1;
-      customersServed++;
-
-      const actualSellPrice = Math.round(Number(chosen.sell_price) * this.priceMult);
-      const unitCost = this.getAdjustedUnitCost(chosen);
-      revenue += actualSellPrice;
-      soldCogs += unitCost;
-    }
-
-    // 處理收市剩餘庫存（耐放品結轉明日；易腐壞品過期報廢，按 1 - spoilage_rate 折價回收殘值）
-    let spoilageLoss = 0;
-    let salvageRefund = 0;
-    const nextInventory = {};
+    const fac = this.getFacilityStats();
     const spoilRate = Number(cfg.meta.spoilage_rate);
 
-    unlockedProds.forEach(p => {
-      const leftover = availableStock[p.prod_id] || 0;
+    // 計算易腐壞食材過期報廢
+    let spoilageLoss = 0;
+    cfg.products.forEach(p => {
+      const leftover = this.state.inventory[p.prod_id] || 0;
       const isPerish = (p.is_perishable === true || String(p.is_perishable).toUpperCase() === "TRUE");
-      const unitCost = this.getAdjustedUnitCost(p);
-
-      if (leftover > 0) {
-        if (isPerish) {
-          const loss = Math.round(leftover * unitCost * spoilRate);
-          const refund = (leftover * unitCost) - loss;
-          spoilageLoss += loss;
-          salvageRefund += refund;
-          nextInventory[p.prod_id] = 0;
-        } else {
-          nextInventory[p.prod_id] = leftover;
-        }
-      } else {
-        nextInventory[p.prod_id] = 0;
+      if (leftover > 0 && isPerish) {
+        const unitCost = this.getAdjustedUnitCost(p);
+        spoilageLoss += Math.round(leftover * unitCost * spoilRate);
+        this.state.inventory[p.prod_id] = 0;
       }
     });
 
-    const totalRevenueWithContract = revenue + (contractSuccess ? contractDelta : 0);
-    const totalCogsAndSpoilage = soldCogs + spoilageLoss;
-    const grossProfit = totalRevenueWithContract - totalCogsAndSpoilage;
-    const grossMargin = totalRevenueWithContract > 0 ? (grossProfit / totalRevenueWithContract) : 0;
+    // 急單違約金
+    let penalty = 0;
+    if (this.activeContract && this.activeContract.done < this.activeContract.target) {
+      penalty = this.activeContract.penalty;
+    }
 
-    const penaltyExpense = (!contractSuccess && this.activeContract) ? this.activeContract.penalty : 0;
-    const totalFixedAndExtra = facility.fixedOpex + breakdownCost + penaltyExpense;
-    const netCashFlow = grossProfit - totalFixedAndExtra;
+    // 扣除固定開支與違約金
+    const totalFixed = fac.fixedOpex + penalty;
+    this.state.cash -= totalFixed;
 
-    return {
-      actualCustomers,
-      customersServed,
-      stockouts,
-      capacityShortages,
-      revenue: totalRevenueWithContract,
-      soldCogs,
-      spoilageLoss,
-      salvageRefund,
-      grossProfit,
-      grossMargin,
-      rent: facility.rent,
-      equipOpex: facility.equipOpex,
-      loanRepayment: this.state.dailyLoanRepayment,
-      breakdownCost,
-      penaltyExpense,
-      contractSuccess,
-      activeContract: this.activeContract,
-      netCashFlow,
-      nextInventory,
-      prepCashSpent
-    };
-  },
-
-  finalizeDailyPnL(res) {
-    // 1. 結算現金（回收易腐壞品殘值 + 營業額 - 固定開支 - 維修與違約金；備貨費開工時已扣）
-    const cashDeltaAfterPrep = res.revenue + res.salvageRefund - res.rent - res.equipOpex - res.loanRepayment - res.breakdownCost - res.penaltyExpense;
-    this.state.cash = Math.round(this.state.cash + cashDeltaAfterPrep);
-    this.state.totalRevenue += res.revenue;
-    this.state.inventory = res.nextInventory;
-
-    // 2. 扣減貸款餘額
     if (this.state.remainingDebt > 0) {
-      this.state.remainingDebt = Math.max(0, this.state.remainingDebt - res.loanRepayment);
-      if (this.state.remainingDebt === 0) {
-        this.state.dailyLoanRepayment = 0;
-      }
+      this.state.remainingDebt = Math.max(0, this.state.remainingDebt - this.state.dailyLoanRepayment);
+      if (this.state.remainingDebt === 0) this.state.dailyLoanRepayment = 0;
     }
 
-    // 3. 更新店鋪口碑與動態 Buff/Debuff
+    const grossProfit = this.todayStats.revenue - this.todayStats.soldCogs - spoilageLoss;
+    const grossMargin = this.todayStats.revenue > 0 ? (grossProfit / this.todayStats.revenue) : 0;
+    const netProfit = grossProfit - totalFixed;
+
+    // 口碑與動態狀態獎懲
     let repDelta = 0;
-    const newBadges = [];
-
-    if (res.capacityShortages > Math.max(2, res.actualCustomers * 0.2)) {
-      repDelta -= 4;
-      this.addStatus("st_bad_review");
-      newBadges.push("🔴 排隊過長觸發「排隊負評發酵」");
-    } else if (res.stockouts > Math.max(3, res.actualCustomers * 0.25)) {
-      repDelta -= 3;
-      newBadges.push("⚠️ 嚴重斷貨導致口碑下降");
-    } else if (res.customersServed > 0) {
-      repDelta += 2;
-    }
-
-    if (res.stockouts === 0 && res.customersServed >= 10) {
+    const notes = [];
+    if (this.todayStats.served >= 8 && this.todayStats.stockouts === 0 && this.todayStats.queueFails <= 1) {
+      repDelta += 3;
       this.state.zeroShortageStreak += 1;
       if (this.state.zeroShortageStreak >= 3) {
         this.addStatus("st_zero_shortage");
-        newBadges.push("🟢 連續3日無斷貨，獲得「零缺貨口碑」");
+        notes.push("🟢 連續 3 日服務順暢，獲得「零缺貨口碑」");
       }
     } else {
       this.state.zeroShortageStreak = 0;
     }
 
-    if (this.state.cash >= 30000) {
-      this.addStatus("st_vip_supplier");
-      newBadges.push("🟢 資金充裕獲得「供應商 VIP 折扣」");
+    if (this.todayStats.queueFails >= 3) {
+      this.addStatus("st_bad_review");
+      notes.push("🔴 今日排隊流失過多，觸發「排隊負評發酵」");
     }
 
-    // 隨機明日天氣輪換（35% 機率出現晴朗或暴雨）
-    const weatherRoll = Math.random();
-    if (weatherRoll < 0.20) {
+    if (this.state.cash >= 30000) {
+      this.addStatus("st_vip_supplier");
+      notes.push("🟢 資金充裕獲得「供應商 VIP 折扣」");
+    }
+
+    const roll = Math.random();
+    if (roll < 0.22) {
       this.addStatus("st_sunny");
-      newBadges.push("🟢 預報明日「晴朗好天氣」");
-    } else if (weatherRoll > 0.85 && this.state.day >= 3) {
+      notes.push("🟢 預報明日「晴朗好天氣」");
+    } else if (roll > 0.85 && this.state.day >= 3) {
       this.addStatus("st_rainstorm");
-      newBadges.push("🔴 預報明日「暴雨預警」");
+      notes.push("🔴 預報明日「暴雨預警」");
     }
 
     this.state.reputation = Math.max(0, Math.min(100, this.state.reputation + repDelta));
 
-    // 4. 記錄歷史毛利與流水帳
-    this.state.marginHistory.push(res.grossMargin);
+    this.state.marginHistory.push(grossMargin);
     if (this.state.marginHistory.length > 7) this.state.marginHistory.shift();
 
     this.state.historyLogs.unshift({
       day: this.state.day,
-      revenue: res.revenue,
-      margin: Math.round(res.grossMargin * 100),
-      net: res.netCashFlow,
+      revenue: this.todayStats.revenue,
+      margin: Math.round(grossMargin * 100),
+      net: netProfit,
       cashAfter: this.state.cash
     });
     if (this.state.historyLogs.length > 15) this.state.historyLogs.pop();
 
-    // 5. 遞減現有狀態剩餘天數
     this.state.activeStatuses = this.state.activeStatuses
       .map(s => ({ ...s, daysLeft: s.daysLeft - 1 }))
       .filter(s => s.daysLeft > 0);
 
     SaveManager.save(this.state);
     UI.renderAll();
-    UI.openPnLModal(res, repDelta, newBadges);
+    UI.openPnLModal({
+      revenue: this.todayStats.revenue,
+      soldCogs: this.todayStats.soldCogs,
+      spoilageLoss,
+      grossProfit,
+      grossMargin,
+      rent: fac.rent,
+      equipOpex: fac.equipOpex,
+      loanRepay: this.state.dailyLoanRepayment,
+      penalty,
+      netProfit,
+      repDelta,
+      notes
+    });
   },
 
-  // 關閉日結損益表後，檢查：1. 資金鏈斷裂(借貸/破產) 2. 三大通關結局 3. 進入下一日
   proceedAfterPnL() {
-    // 檢查資金鏈斷裂（Cash < 0）
     if (this.state.cash < 0) {
       const diff = this.getDifficulty();
       if (this.state.loansUsed < Number(diff.max_loans)) {
-        // 觸發第一次緊急救命貸款
         const deficit = Math.abs(this.state.cash);
         const principal = deficit + Number(diff.loan_buffer);
         const totalRepay = Math.ceil(principal * (1 + Number(diff.interest_rate)));
@@ -1196,10 +1489,9 @@ const Game = {
         this.addStatus("st_credit_tight");
         SaveManager.save(this.state);
         UI.renderAll();
-        UI.openBailoutModal(deficit, principal, totalRepay, dailyPay, Number(diff.max_loans) - this.state.loansUsed);
+        UI.openBailoutModal(deficit, totalRepay, dailyPay, Number(diff.max_loans) - this.state.loansUsed);
         return;
       } else {
-        // 第二次跌穿 $0 或硬核模式 -> 正式破產 Game Over
         this.state.isGameOver = true;
         SaveManager.save(this.state);
         UI.openGameOverModal();
@@ -1207,11 +1499,10 @@ const Game = {
       }
     }
 
-    // 檢查是否達成三大通關結局之一（必須無未還貸款）
     if (this.state.remainingDebt <= 0) {
-      const achieved = this.checkEndings();
-      if (achieved) {
-        UI.openVictoryModal(achieved);
+      const end = this.checkEndings();
+      if (end) {
+        UI.openVictoryModal(end);
         return;
       }
     }
@@ -1221,32 +1512,28 @@ const Game = {
 
   advanceToNextDay() {
     this.state.day += 1;
-    this.resetDailyTempState();
     SaveManager.save(this.state);
     UI.closeModal();
-    UI.renderAll();
-    this.checkMorningEvents();
+    this.startMorning(false);
   },
 
-  getAvg7DayMargin() {
+  getAvgMargin() {
     if (this.state.marginHistory.length === 0) return 0;
-    const sum = this.state.marginHistory.reduce((a, b) => a + b, 0);
-    return sum / this.state.marginHistory.length;
+    return this.state.marginHistory.reduce((a, b) => a + b, 0) / this.state.marginHistory.length;
   },
 
   checkEndings() {
-    const avgMargin = this.getAvg7DayMargin();
+    const avg = this.getAvgMargin();
     for (const end of ConfigLoader.current.endings) {
-      const storeOk = end.ending_id === "end_artisan"
-        ? this.state.stores === 1
-        : this.state.stores >= Number(end.req_stores);
-      const cashOk = this.state.cash >= Number(end.req_cash);
-      const repOk = this.state.reputation >= Number(end.req_rep);
-      const marginOk = this.state.marginHistory.length >= 3 && avgMargin >= Number(end.req_margin);
-      const dayOk = this.state.day <= Number(end.max_day);
-      const revOk = this.state.totalRevenue >= Number(end.req_total_rev);
-
-      if (storeOk && cashOk && repOk && marginOk && dayOk && revOk) {
+      const storeOk = end.ending_id === "end_artisan" ? this.state.stores === 1 : this.state.stores >= Number(end.req_stores);
+      if (
+        storeOk &&
+        this.state.cash >= Number(end.req_cash) &&
+        this.state.reputation >= Number(end.req_rep) &&
+        this.state.marginHistory.length >= 3 && avg >= Number(end.req_margin) &&
+        this.state.day <= Number(end.max_day) &&
+        this.state.totalRevenue >= Number(end.req_total_rev)
+      ) {
         return end;
       }
     }
@@ -1256,105 +1543,54 @@ const Game = {
 
 /**
  * ============================================================
- * 5. UI：畫面渲染與彈窗互動
+ * 5. UI：介面渲染與互動
  * ============================================================
  */
 const UI = {
-  currentTab: "prep",
+  currentTab: "stock",
 
   showToast(msg) {
     const el = document.getElementById("toast");
     el.textContent = msg;
     el.classList.add("show");
-    clearTimeout(this._toastTimer);
-    this._toastTimer = setTimeout(() => el.classList.remove("show"), 2600);
+    clearTimeout(this._t);
+    this._t = setTimeout(() => el.classList.remove("show"), 2500);
   },
 
   switchTab(tab) {
     this.currentTab = tab;
-    ["prep", "equip", "ledger"].forEach(t => {
+    ["stock", "equip", "ledger"].forEach(t => {
       document.getElementById(`tab-${t}`).style.display = t === tab ? "block" : "none";
       document.getElementById(`tab-btn-${t}`).classList.toggle("active", t === tab);
     });
-    if (tab === "prep") this.renderPrepTab();
+    if (tab === "stock") this.renderStockTab();
     if (tab === "equip") this.renderEquipTab();
     if (tab === "ledger") this.renderLedgerTab();
   },
 
   renderAll() {
     if (!Game.state) return;
-    this.updateDockAndHud();
+    this.updateHud();
     this.renderStatusStrip();
-    this.renderPrepTab();
+    this.renderStockTab();
     this.renderEquipTab();
     this.renderLedgerTab();
   },
 
-  updateDockAndHud() {
+  updateHud() {
     const s = Game.state;
-    const cfg = ConfigLoader.current;
     const fac = Game.getFacilityStats();
-    const estDemand = Game.getEstimatedDemand();
-
     document.getElementById("ui-day").textContent = `第 ${s.day} 日・${Game.getWeekdayName()}`;
     document.getElementById("ui-weekend").style.display = Game.isWeekend() ? "inline-block" : "none";
     document.getElementById("ui-stores").textContent = `🏠 ${s.stores}間店`;
 
     const cashEl = document.getElementById("ui-cash");
     cashEl.textContent = `$${s.cash.toLocaleString()}`;
-    cashEl.className = "hud-val" + (s.cash < 1000 ? " danger" : "");
+    cashEl.className = "hud-val" + (s.cash < 800 ? " danger" : "");
 
-    // 計算預計備貨成本、預計毛利率與產能負荷
-    let prepCost = 0;
-    let capLoad = Game.activeContract ? Game.activeContract.capNeeded : 0;
-    let estSalesRev = 0;
-    let estSalesCost = 0;
-
-    cfg.products.forEach(p => {
-      if (Number(p.unlock_day) > s.day) return;
-      const buyQty = Game.prepOrder[p.prod_id] || 0;
-      const totalQty = (s.inventory[p.prod_id] || 0) + buyQty;
-      const unitCost = Game.getAdjustedUnitCost(p);
-      const sellPrice = Math.round(Number(p.sell_price) * Game.priceMult);
-
-      prepCost += buyQty * unitCost;
-      capLoad += totalQty * Number(p.prep_load);
-      estSalesRev += totalQty * sellPrice;
-      estSalesCost += totalQty * unitCost;
-    });
-
-    const estMargin = estSalesRev > 0 ? Math.round(((estSalesRev - estSalesCost) / estSalesRev) * 100) : 0;
-    const marginEl = document.getElementById("ui-margin");
-    marginEl.textContent = `${estMargin}%`;
-    marginEl.className = "hud-val" + (estMargin >= 60 ? " good" : estMargin < 40 ? " danger" : "");
-
-    // 盈虧平衡點 = 固定開支 / 預計毛利率
-    const breakEven = estMargin > 0 ? Math.round(fac.fixedOpex / (estMargin / 100)) : fac.fixedOpex;
-    document.getElementById("ui-breakeven").textContent = `$${breakEven.toLocaleString()}`;
+    document.getElementById("ui-today-rev").textContent = `$${Game.todayStats.revenue.toLocaleString()}`;
+    document.getElementById("ui-fixed-opex").textContent = `$${fac.fixedOpex.toLocaleString()}`;
     document.getElementById("ui-rep").textContent = `${s.reputation} / 100`;
-
-    // 市場預估提示
-    const contractBadge = document.getElementById("ui-contract-badge");
-    if (Game.activeContract) {
-      contractBadge.style.display = "inline-block";
-      contractBadge.textContent = `急單預留 ${Game.activeContract.capNeeded} 產能`;
-    } else {
-      contractBadge.style.display = "none";
-    }
-
-    document.getElementById("ui-forecast-text").innerHTML =
-      `預計客流：<strong>約 ${estDemand} 人</strong>｜總產能上限：<strong>${fac.totalCapacity} 點</strong>｜固定日開支：<strong>$${fac.fixedOpex}</strong>`;
-
-    document.getElementById("ui-prep-cost").textContent = `$${prepCost.toLocaleString()}`;
-    const capEl = document.getElementById("ui-cap-usage");
-    capEl.textContent = `${capLoad} / ${fac.totalCapacity}`;
-    capEl.className = capLoad > fac.totalCapacity ? "warn-text" : "";
-
-    const btn = document.getElementById("btn-start-day");
-    btn.disabled = prepCost > s.cash;
-    btn.textContent = prepCost > s.cash
-      ? "⚠️ 現金不足以支付備貨費"
-      : `🚀 支付 $${prepCost.toLocaleString()} 備貨並開始今日營業`;
   },
 
   renderStatusStrip() {
@@ -1363,7 +1599,7 @@ const UI = {
     const items = [];
 
     if (Game.state.remainingDebt > 0) {
-      items.push(`<span class="pill DEBT" onclick="UI.showToast('尚餘緊急貸款 $${Game.state.remainingDebt}，每日自動還款 $${Game.state.dailyLoanRepayment}')">🚨 欠債 $${Game.state.remainingDebt} (-$${Game.state.dailyLoanRepayment}/日)</span>`);
+      items.push(`<span class="pill DEBT" onclick="UI.showToast('尚餘貸款 $${Game.state.remainingDebt}，每日收市扣 $${Game.state.dailyLoanRepayment}')">🚨 欠債 $${Game.state.remainingDebt} (-$${Game.state.dailyLoanRepayment}/日)</span>`);
     }
 
     Game.state.activeStatuses.forEach(st => {
@@ -1374,20 +1610,20 @@ const UI = {
     });
 
     if (items.length === 0) {
-      items.push(`<span style="font-size:11px;color:#b8a89e;">今日市場平穩，暫無特殊狀態</span>`);
+      items.push(`<span style="font-size:10px;color:#b8a89e;">今日市場平穩，點擊商品按鈕可隨時補貨</span>`);
     }
     strip.innerHTML = items.join("");
   },
 
-  renderPrepTab() {
-    const container = document.getElementById("tab-prep");
+  renderStockTab() {
+    const container = document.getElementById("tab-stock");
     const s = Game.state;
-    const html = ConfigLoader.current.products.map(p => {
+    container.innerHTML = ConfigLoader.current.products.map(p => {
       const unlockDay = Number(p.unlock_day);
       if (unlockDay > s.day) {
         return `<div class="card" style="opacity:0.55;">
           <div class="card-title">🔒 ${p.name}</div>
-          <div style="font-size:12px;color:var(--text-muted);margin-top:4px;">營業至第 ${unlockDay} 日自動解鎖新品</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:3px;">第 ${unlockDay} 日解鎖新品</div>
         </div>`;
       }
 
@@ -1395,40 +1631,35 @@ const UI = {
       const unitCost = Game.getAdjustedUnitCost(p);
       const margin = Math.round(((sellPrice - unitCost) / sellPrice) * 100);
       const isPerish = (p.is_perishable === true || String(p.is_perishable).toUpperCase() === "TRUE");
-      const carryOver = s.inventory[p.prod_id] || 0;
-      const buyQty = Game.prepOrder[p.prod_id] || 0;
+      const stock = s.inventory[p.prod_id] || 0;
+      const pct = Math.min(100, (stock / 30) * 100);
 
       return `
         <div class="card">
-          <div class="card-header">
-            <div>
-              <span class="card-title">${p.name}</span>
-              ${carryOver > 0 ? `<span style="font-size:11px;color:var(--green);margin-left:6px;">(已有庫存 ${carryOver})</span>` : ""}
-            </div>
+          <div class="card-top">
+            <span class="card-title">${PROD_ICONS[p.prod_id] || "☕"} ${p.name}</span>
             <span class="badge ${isPerish ? "badge-perish" : "badge-keep"}">
-              ${isPerish ? "易腐壞 60%報廢" : "耐存放 可結轉"}
+              ${isPerish ? "易腐壞(收市報廢)" : "耐存放(可留明日)"}
             </span>
           </div>
-          <div class="meta-row">
-            <span>售價：<strong>$${sellPrice}</strong></span>
-            <span>原料成本：<strong>$${unitCost}</strong></span>
-            <span>毛利率：<strong style="color:${margin >= 60 ? "var(--green)" : "var(--accent)"}">${margin}%</strong></span>
-            <span>產能負荷：<strong>${p.prep_load}點/件</strong></span>
+          <div class="meta-line">
+            <span>售價 <strong>$${sellPrice}</strong>｜成本 <strong>$${unitCost}</strong></span>
+            <span>毛利率 <strong style="color:${margin >= 60 ? "var(--green)" : "var(--accent)"}">${margin}%</strong></span>
           </div>
-          <div class="qty-controls">
-            <span style="font-size:12px;">今日新入貨 (共 ${carryOver + buyQty} 件)</span>
-            <div class="btn-group">
-              <button class="step-btn" onclick="Game.adjustPrep('${p.prod_id}', -5)">-5</button>
-              <button class="step-btn" onclick="Game.adjustPrep('${p.prod_id}', -1)">-1</button>
-              <span class="qty-display">${buyQty}</span>
-              <button class="step-btn" onclick="Game.adjustPrep('${p.prod_id}', 1)">+1</button>
-              <button class="step-btn" onclick="Game.adjustPrep('${p.prod_id}', 5)">+5</button>
+          <div class="stock-bar-wrap">
+            <div class="stock-bar-fill ${stock <= 4 ? "low" : ""}" style="width:${pct}%"></div>
+          </div>
+          <div class="restock-row">
+            <span style="font-size:12px;">現有庫存：<strong style="color:${stock <= 4 ? "var(--red)" : "var(--text-main)"}">${stock} 份</strong></span>
+            <div class="buy-btns">
+              <button class="chip-btn" ${s.cash < unitCost ? "disabled" : ""} onclick="Game.restockNow('${p.prod_id}', 1)">+1 ($${unitCost})</button>
+              <button class="chip-btn" ${s.cash < unitCost * 5 ? "disabled" : ""} onclick="Game.restockNow('${p.prod_id}', 5)">+5 ($${unitCost * 5})</button>
+              <button class="chip-btn" ${s.cash < unitCost * 10 ? "disabled" : ""} onclick="Game.restockNow('${p.prod_id}', 10)">+10 ($${unitCost * 10})</button>
             </div>
           </div>
         </div>
       `;
     }).join("");
-    container.innerHTML = html;
   },
 
   renderEquipTab() {
@@ -1438,14 +1669,14 @@ const UI = {
 
     let html = `
       <div class="card" style="background:#f5f9ff; border-color:#cfe0f5;">
-        <div class="card-header">
-          <span class="card-title">🏢 分店商業擴張（目前 ${s.stores} 間店）</span>
+        <div class="card-top">
+          <span class="card-title">🏢 分店連鎖擴張（目前 ${s.stores} 間）</span>
           <span class="badge badge-keep">客流 +80%/店</span>
         </div>
-        <div style="font-size:12px; color:var(--text-muted); margin-bottom:10px; line-height:1.5;">
-          開設新分店可大幅提升全品牌客流量，但每日固定租金將同步增加 $${ConfigLoader.current.meta.base_daily_rent}/日。
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;">
+          開分店可大幅提升客流量，但每日固定租金會增加 $${ConfigLoader.current.meta.base_daily_rent}/日。
         </div>
-        <button class="action-btn secondary" ${s.cash < nextStoreCost ? "disabled" : ""} onclick="Game.openNewStore()">
+        <button class="action-btn secondary" ${s.cash < nextStoreCost ? "disabled" : ""} onclick="Game.openNewStoreNow()">
           開設第 ${s.stores + 1} 間分店（需現金 $${nextStoreCost.toLocaleString()}）
         </button>
       </div>
@@ -1459,23 +1690,22 @@ const UI = {
       if (unlockDay > s.day) {
         return `<div class="card" style="opacity:0.55;">
           <div class="card-title">🔒 ${eq.name}</div>
-          <div style="font-size:12px;color:var(--text-muted);margin-top:4px;">營業至第 ${unlockDay} 日開放採購</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:3px;">第 ${unlockDay} 日開放採購</div>
         </div>`;
       }
 
       return `
         <div class="card">
-          <div class="card-header">
+          <div class="card-top">
             <span class="card-title">${eq.name}</span>
-            <span class="badge badge-keep">已擁有 ${count} 台</span>
+            <span class="badge badge-keep">吧台已有 ${count} 台</span>
           </div>
-          <div class="meta-row">
-            <span>提供產能：<strong>+${eq.daily_capacity} 點/日</strong></span>
-            <span>每日維護費：<strong>+$${eq.daily_opex}/日</strong></span>
-            <span>故障率：<strong>${Math.round(Number(eq.breakdown_chance) * 100)}%</strong></span>
+          <div class="meta-line">
+            <span>出餐速度：<strong>+${eq.daily_capacity} 產能</strong></span>
+            <span>日維護費：<strong>+$${eq.daily_opex}/日</strong></span>
           </div>
-          <button class="action-btn" ${s.cash < buyCost ? "disabled" : ""} onclick="Game.buyEquipment('${eq.equip_id}')">
-            ${buyCost === 0 ? "免費添置備用機" : `購置設備（CapEx $${buyCost.toLocaleString()}）`}
+          <button class="action-btn" ${s.cash < buyCost ? "disabled" : ""} onclick="Game.buyEquipmentNow('${eq.equip_id}')">
+            ${buyCost === 0 ? "免費添置備用機" : `立即購入並擺上吧台（$${buyCost.toLocaleString()}）`}
           </button>
         </div>
       `;
@@ -1488,20 +1718,20 @@ const UI = {
     const container = document.getElementById("tab-ledger");
     const logs = Game.state.historyLogs;
     if (logs.length === 0) {
-      container.innerHTML = `<div class="card" style="text-align:center;color:var(--text-muted);padding:24px;">暫無營業日結紀錄，完成第 1 日營業後即可查看財務報表。</div>`;
+      container.innerHTML = `<div class="card" style="text-align:center;color:var(--text-muted);padding:20px;font-size:12px;">完成今日 60 秒營業後，收市損益表會記錄喺呢度。</div>`;
       return;
     }
     container.innerHTML = logs.map(l => `
-      <div class="card" style="padding:10px 12px;">
-        <div style="display:flex;justify-content:space-between;font-weight:700;font-size:13px;">
-          <span>第 ${l.day} 日收市結算</span>
+      <div class="card" style="padding:9px 12px;">
+        <div style="display:flex;justify-content:space-between;font-weight:700;font-size:12px;">
+          <span>第 ${l.day} 日收市</span>
           <span style="color:${l.net >= 0 ? "var(--green)" : "var(--red)"}">
-            淨現金流：${l.net >= 0 ? "+" : ""}$${l.net.toLocaleString()}
+            淨利：${l.net >= 0 ? "+" : ""}$${l.net.toLocaleString()}
           </span>
         </div>
-        <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text-muted);margin-top:4px;">
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-muted);margin-top:3px;">
           <span>營業額 $${l.revenue.toLocaleString()}｜毛利率 ${l.margin}%</span>
-          <span>結餘 $${l.cashAfter.toLocaleString()}</span>
+          <span>現金結餘 $${l.cashAfter.toLocaleString()}</span>
         </div>
       </div>
     `).join("");
@@ -1517,33 +1747,32 @@ const UI = {
   },
 
   openDifficultyModal() {
-    const diffs = ConfigLoader.current.difficulties;
-    const cardsHtml = diffs.map(d => `
+    const cardsHtml = ConfigLoader.current.difficulties.map(d => `
       <div class="diff-card" onclick="Game.startNewGame('${d.diff_id}')">
         <div style="display:flex;justify-content:space-between;align-items:center;">
-          <strong style="font-size:15px;">${d.name}</strong>
+          <strong style="font-size:14px;">${d.name}</strong>
           <span class="badge badge-keep">本金 $${Number(d.start_cash).toLocaleString()}</span>
         </div>
-        <div style="font-size:12px;color:var(--text-muted);margin-top:6px;line-height:1.5;">
+        <div style="font-size:11px;color:var(--text-muted);margin-top:5px;">
           ${Number(d.max_loans) > 0
-            ? `緊急借貸上限：<strong>${d.max_loans} 次</strong>（填平赤字 + $${d.loan_buffer}，利息 ${Math.round(d.interest_rate * 100)}%，分 ${d.repay_days} 日攤還）`
-            : `緊急借貸上限：<strong>0 次</strong>（現金低於 $0 即宣告破產，零容錯挑戰）`}
+            ? `緊急借貸上限：${d.max_loans} 次（填平赤字 + $${d.loan_buffer}，分 ${d.repay_days} 日攤還）`
+            : `緊急借貸上限：0 次（現金低於 $0 即破產）`}
         </div>
       </div>
     `).join("");
 
     this.openModal(`
       <h2 class="modal-title">☕ 白手起家：街角創業錄</h2>
-      <p style="font-size:13px;color:var(--text-muted);margin-top:0;">請選擇創業難度，開始管理你嘅第一間街角小舖：</p>
+      <p style="font-size:12px;color:var(--text-muted);margin-top:0;">現實 1 分鐘 ＝ 遊戲 1 日，隨時觀察店內客流、即時補貨與添置設備：</p>
       ${cardsHtml}
     `);
   },
 
   openDecisionCardModal(card) {
     this.openModal(`
-      <span class="badge badge-perish">📋 盤前商業抉擇</span>
+      <span class="badge badge-perish">📋 商業抉擇卡</span>
       <h2 class="modal-title" style="margin-top:8px;">${card.title}</h2>
-      <p style="font-size:13px;line-height:1.6;color:var(--text-main);">${card.desc}</p>
+      <p style="font-size:13px;line-height:1.5;">${card.desc}</p>
       <button class="action-btn" style="margin-bottom:8px;" onclick="Game.applyCardEffect('${card.opt_a_effect}')">
         選擇 A：${card.opt_a_text}
       </button>
@@ -1553,154 +1782,96 @@ const UI = {
     `);
   },
 
-  runOperatingAnimation(res, onComplete) {
-    this.openModal(`
-      <h2 class="modal-title">🏪 第 ${Game.state.day} 日營業中...</h2>
-      <div style="font-size:13px;color:var(--text-muted);">客人陸續進店，正在統計成交與產能負荷</div>
-      <div class="sim-bar-wrap"><div class="sim-bar-fill" id="sim-bar"></div></div>
-      <div class="sim-log" id="sim-log"></div>
-    `);
-
-    const logEl = document.getElementById("sim-log");
-    const barEl = document.getElementById("sim-bar");
-    const steps = [
-      `🌅 早上開店：今日共有 ${res.actualCustomers} 位客人前來光顧。`,
-      `☕ 吧台運作：成功接待 ${res.customersServed} 位客人，累計營業額 $${res.revenue.toLocaleString()}。`,
-      res.capacityShortages > 0
-        ? `⚠️ 產能瓶頸：有 ${res.capacityShortages} 位客人因為排隊太耐憤怒離開！`
-        : `✨ 出餐順暢：設備產能充足，無客人因排隊流失。`,
-      res.stockouts > 0
-        ? `📦 庫存告急：有 ${res.stockouts} 位客人想買嘅產品已沽清。`
-        : `✅ 備貨精準：今日全品項未出現斷貨情況！`,
-      res.activeContract
-        ? (res.contractSuccess ? `🎉 寫字樓急單順利交付！獲得額外獎金 +$${res.activeContract.reward}` : `❌ 產能不足未能完成急單，扣除違約金 -$${res.activeContract.penalty}`)
-        : `🧾 傍晚收市：正在核算原材料成本、報廢損耗與固定租金...`
-    ];
-
-    let idx = 0;
-    const timer = setInterval(() => {
-      if (idx < steps.length) {
-        logEl.innerHTML += `<div>${steps[idx]}</div>`;
-        logEl.scrollTop = logEl.scrollHeight;
-        barEl.style.width = `${((idx + 1) / steps.length) * 100}%`;
-        idx++;
-      } else {
-        clearInterval(timer);
-        setTimeout(onComplete, 450);
-      }
-    }, 550);
-  },
-
-  openPnLModal(res, repDelta, newBadges) {
+  openPnLModal(res) {
     const marginPct = Math.round(res.grossMargin * 100);
-    const badgeHtml = newBadges.length > 0
-      ? `<div style="background:#faf7f2;padding:8px;border-radius:8px;font-size:12px;margin-top:10px;line-height:1.5;">${newBadges.join("<br>")}</div>`
+    const notesHtml = res.notes.length > 0
+      ? `<div style="background:#faf7f2;padding:8px;border-radius:8px;font-size:11px;margin-top:8px;">${res.notes.join("<br>")}</div>`
       : "";
 
     this.openModal(`
-      <h2 class="modal-title">📊 第 ${Game.state.day} 日收市損益表</h2>
-      <div class="pnl-row"><span>營業總額（Revenue）</span><strong style="color:var(--green);">+$${res.revenue.toLocaleString()}</strong></div>
+      <h2 class="modal-title">🧾 第 ${Game.state.day} 日打烊損益表</h2>
+      <div class="pnl-row"><span>今日營業總額</span><strong style="color:var(--green);">+$${res.revenue.toLocaleString()}</strong></div>
       <div class="pnl-row"><span>已售商品原料成本</span><span>-$${res.soldCogs.toLocaleString()}</span></div>
-      <div class="pnl-row"><span>過期食材報廢損耗</span><span style="color:${res.spoilageLoss > 0 ? "var(--red)" : "inherit"}">-$${res.spoilageLoss.toLocaleString()}</span></div>
+      <div class="pnl-row"><span>易腐壞食材過期報廢</span><span style="color:${res.spoilageLoss > 0 ? "var(--red)" : "inherit"}">-$${res.spoilageLoss.toLocaleString()}</span></div>
       <div class="pnl-row"><span><strong>今日毛利（毛利率 ${marginPct}%）</strong></span><strong>$${res.grossProfit.toLocaleString()}</strong></div>
-      <div class="pnl-row"><span>店鋪固定日租（${Game.state.stores}間店）</span><span>-$${res.rent.toLocaleString()}</span></div>
-      <div class="pnl-row"><span>設備折舊與水電維護</span><span>-$${res.equipOpex.toLocaleString()}</span></div>
-      ${res.loanRepayment > 0 ? `<div class="pnl-row"><span style="color:var(--red);">緊急貸款每日還款</span><span style="color:var(--red);">-$${res.loanRepayment.toLocaleString()}</span></div>` : ""}
-      ${res.breakdownCost > 0 ? `<div class="pnl-row"><span style="color:var(--red);">設備突發維修費</span><span style="color:var(--red);">-$${res.breakdownCost.toLocaleString()}</span></div>` : ""}
-      ${res.penaltyExpense > 0 ? `<div class="pnl-row"><span style="color:var(--red);">急單違約賠償金</span><span style="color:var(--red);">-$${res.penaltyExpense.toLocaleString()}</span></div>` : ""}
+      <div class="pnl-row"><span>店鋪固定日租</span><span>-$${res.rent.toLocaleString()}</span></div>
+      <div class="pnl-row"><span>設備維護與水電</span><span>-$${res.equipOpex.toLocaleString()}</span></div>
+      ${res.loanRepay > 0 ? `<div class="pnl-row"><span style="color:var(--red);">緊急貸款每日還款</span><span style="color:var(--red);">-$${res.loanRepay.toLocaleString()}</span></div>` : ""}
+      ${res.penalty > 0 ? `<div class="pnl-row"><span style="color:var(--red);">急單違約金</span><span style="color:var(--red);">-$${res.penalty.toLocaleString()}</span></div>` : ""}
       <div class="pnl-row total">
-        <span>今日淨現金流</span>
-        <span style="color:${res.netCashFlow >= 0 ? "var(--green)" : "var(--red)"}">
-          ${res.netCashFlow >= 0 ? "+" : ""}$${res.netCashFlow.toLocaleString()}
+        <span>今日淨利</span>
+        <span style="color:${res.netProfit >= 0 ? "var(--green)" : "var(--red)"}">
+          ${res.netProfit >= 0 ? "+" : ""}$${res.netProfit.toLocaleString()}
         </span>
       </div>
-      <div style="font-size:12px;color:var(--text-muted);margin-top:8px;">
-        店鋪口碑變化：<strong>${repDelta >= 0 ? "+" : ""}${repDelta}</strong>（目前 ${Game.state.reputation}/100）｜
-        收市可用現金：<strong>$${Game.state.cash.toLocaleString()}</strong>
+      <div style="font-size:11px;color:var(--text-muted);margin-top:8px;">
+        收市可用現金：<strong>$${Game.state.cash.toLocaleString()}</strong>｜店鋪口碑：<strong>${Game.state.reputation}/100</strong>
       </div>
-      ${badgeHtml}
-      <button class="action-btn" style="margin-top:14px;" onclick="Game.proceedAfterPnL()">
-        確認結算並繼續
-      </button>
+      ${notesHtml}
+      <button class="action-btn" style="margin-top:12px;" onclick="Game.proceedAfterPnL()">進入下一日營業</button>
     `);
   },
 
-  openBailoutModal(deficit, principal, totalRepay, dailyPay, loansLeft) {
+  openBailoutModal(deficit, totalRepay, dailyPay, loansLeft) {
     const diff = Game.getDifficulty();
     this.openModal(`
-      <span class="badge badge-perish">⚠️ 資金鏈告急・緊急融資啟動</span>
+      <span class="badge badge-perish">⚠️ 資金鏈告急・緊急融資</span>
       <h2 class="modal-title" style="margin-top:8px;color:var(--red);">可用現金跌穿 $0！</h2>
-      <p style="font-size:13px;line-height:1.6;">
-        今日收市後你的現金出現 <strong>-$${deficit.toLocaleString()}</strong> 赤字。銀行已自動為你批出緊急商業週轉貸款，填平赤字並額外注入 <strong>$${diff.loan_buffer}</strong> 營運現金。
+      <p style="font-size:12px;line-height:1.5;">
+        銀行已自動批出緊急週轉貸款，填平 <strong>-$${deficit}</strong> 赤字並注入 <strong>$${diff.loan_buffer}</strong> 營運現金。
       </p>
-      <div style="background:#fdeaea;padding:10px;border-radius:10px;font-size:12px;line-height:1.6;margin-bottom:12px;">
-        • 貸款本息總額：<strong>$${totalRepay.toLocaleString()}</strong>（分 ${diff.repay_days} 日攤還）<br>
-        • 明日新增固定支出：<strong>$${dailyPay.toLocaleString()} / 日</strong><br>
+      <div style="background:#fdeaea;padding:10px;border-radius:8px;font-size:11px;line-height:1.6;margin-bottom:12px;">
+        • 貸款本息總額：<strong>$${totalRepay.toLocaleString()}</strong>（每日收市扣 $${dailyPay}）<br>
         • 附加負面狀態：<strong>信貸緊縮（原料成本 +10%）</strong><br>
         • 剩餘救命融資次數：<strong>${loansLeft} 次</strong>（再次跌穿 $0 將正式破產）
       </div>
-      <button class="action-btn" onclick="Game.advanceToNextDay()">背水一戰，進入明日營業</button>
+      <button class="action-btn" onclick="Game.advanceToNextDay()">背水一戰，繼續營業</button>
     `);
   },
 
   openGameOverModal() {
     const s = Game.state;
-    const diagnosis = s.remainingDebt > 0
-      ? "背負高息緊急貸款後，每日固定還款與租金超出毛利負荷，導致二次資金鏈斷裂。"
-      : "固定開支與過期報廢損耗過高，導致可用現金耗盡且無融資額度。";
-
     this.openModal(`
       <span class="badge" style="background:#7f1d1d;color:#fff;">❌ 資金鏈斷裂・宣告破產</span>
       <h2 class="modal-title" style="margin-top:8px;">創業挑戰失敗</h2>
-      <p style="font-size:13px;color:var(--text-muted);">${diagnosis}</p>
+      <p style="font-size:12px;color:var(--text-muted);">可用現金耗盡且已無緊急融資額度，店鋪被迫結業。</p>
       <div class="pnl-row"><span>存活營業日數</span><strong>${s.day} 日</strong></div>
       <div class="pnl-row"><span>累計總營業額</span><strong>$${s.totalRevenue.toLocaleString()}</strong></div>
-      <div class="pnl-row"><span>最終店鋪口碑</span><strong>${s.reputation} / 100</strong></div>
       <div class="pnl-row"><span>未償還債務</span><strong style="color:var(--red);">$${s.remainingDebt.toLocaleString()}</strong></div>
-      <button class="action-btn" style="margin-top:14px;" onclick="UI.openDifficultyModal()">🔄 重新白手起家</button>
+      <button class="action-btn" style="margin-top:12px;" onclick="UI.openDifficultyModal()">🔄 重新白手起家</button>
     `);
   },
 
   openVictoryModal(ending) {
     const s = Game.state;
-    const avgMargin = Math.round(Game.getAvg7DayMargin() * 100);
     this.openModal(`
       <span class="badge badge-keep">🏆 達成商業通關路線</span>
       <h2 class="modal-title" style="margin-top:8px;">${ending.title}</h2>
-      <p style="font-size:13px;line-height:1.6;">${ending.desc}</p>
+      <p style="font-size:12px;line-height:1.5;">${ending.desc}</p>
       <div class="pnl-row"><span>通關所用日數</span><strong>第 ${s.day} 日</strong></div>
       <div class="pnl-row"><span>最終可用現金</span><strong>$${s.cash.toLocaleString()}</strong></div>
-      <div class="pnl-row"><span>近期平均毛利率</span><strong>${avgMargin}%</strong></div>
-      <div class="pnl-row"><span>最終店鋪口碑</span><strong>${s.reputation} / 100</strong></div>
-      <button class="action-btn" style="margin-top:12px;" onclick="Game.advanceToNextDay()">繼續留低經營（衝刺其他結局）</button>
-      <button class="action-btn secondary" style="margin-top:8px;" onclick="UI.openDifficultyModal()">開啟新難度挑戰</button>
+      <div class="pnl-row"><span>店鋪口碑</span><strong>${s.reputation} / 100</strong></div>
+      <button class="action-btn" style="margin-top:12px;" onclick="Game.advanceToNextDay()">繼續留低經營</button>
+      <button class="action-btn secondary" style="margin-top:8px;" onclick="UI.openDifficultyModal()">開新難度挑戰</button>
     `);
   },
 
   openEndings() {
     const s = Game.state;
-    const avgMargin = Math.round(Game.getAvg7DayMargin() * 100);
-    const listHtml = ConfigLoader.current.endings.map(end => {
-      const cashPct = Math.min(100, Math.round((s.cash / Number(end.req_cash)) * 100));
-      return `
-        <div class="card">
-          <div class="card-title">${end.title}</div>
-          <div style="font-size:12px;color:var(--text-muted);margin:4px 0 8px;">${end.desc}</div>
-          <div style="font-size:11px;line-height:1.6;">
-            • 分店要求：${end.ending_id === "end_artisan" ? "保持單店 (1間)" : `至少 ${end.req_stores} 間`}（目前 ${s.stores} 間）<br>
-            • 現金目標：$${Number(end.req_cash).toLocaleString()}（目前 ${cashPct}%）<br>
-            • 口碑要求：${end.req_rep} 分（目前 ${s.reputation} 分）｜毛利率：${Math.round(end.req_margin * 100)}%（目前 ${avgMargin}%）<br>
-            ${Number(end.max_day) < 999 ? `• 時間限制：<strong>第 ${end.max_day} 日前達成</strong>（目前第 ${s.day} 日）<br>` : ""}
-            ${Number(end.req_total_rev) > 0 ? `• 累計營業額：$${Number(end.req_total_rev).toLocaleString()}（目前 $${s.totalRevenue.toLocaleString()}）` : ""}
-          </div>
-          <div class="prog-bg"><div class="prog-fill" style="width:${cashPct}%"></div></div>
+    const avgMargin = Math.round(Game.getAvgMargin() * 100);
+    const listHtml = ConfigLoader.current.endings.map(end => `
+      <div class="card">
+        <div class="card-title">${end.title}</div>
+        <div style="font-size:11px;color:var(--text-muted);margin:3px 0 6px;">${end.desc}</div>
+        <div style="font-size:11px;line-height:1.5;">
+          • 分店：${end.ending_id === "end_artisan" ? "單店 (1間)" : `≥${end.req_stores}間`}（目前 ${s.stores}間）｜現金：$${Number(end.req_cash).toLocaleString()}<br>
+          • 口碑：${end.req_rep}分（目前 ${s.reputation}）｜毛利率：${Math.round(end.req_margin * 100)}%（目前 ${avgMargin}%）
         </div>
-      `;
-    }).join("");
+      </div>
+    `).join("");
 
     this.openModal(`
       <h2 class="modal-title">🎯 三大商業版圖（通關條件）</h2>
-      <p style="font-size:12px;color:var(--text-muted);margin-top:0;">滿足任何一條路線且無未還貸款，即可於收市時觸發通關：</p>
       ${listHtml}
       <button class="action-btn secondary" onclick="UI.closeModal()">返回店鋪</button>
     `);
@@ -1712,19 +1883,19 @@ const UI = {
 
     this.openModal(`
       <h2 class="modal-title">⚙️ 遊戲設定與資料管理</h2>
-      <div style="font-size:12px;margin-bottom:12px;">
-        <strong>Google Sheet API 網址（目前數值版本 v${ConfigLoader.current.meta.config_version}）：</strong>
-        <input type="text" id="input-gas-url" value="${currentUrl}" placeholder="貼上 https://script.google.com/macros/s/.../exec" style="margin-top:4px;" />
-        <button class="action-btn secondary" style="margin-top:6px;padding:7px;" onclick="UI.saveGasUrl()">儲存並立即從試算表同步數值</button>
+      <div style="font-size:11px;margin-bottom:10px;">
+        <strong>Google Sheet API 網址（版本 v${ConfigLoader.current.meta.config_version}）：</strong>
+        <input type="text" id="input-gas-url" value="${currentUrl}" placeholder="貼上 .../exec 網址" style="margin-top:4px;" />
+        <button class="action-btn secondary" style="margin-top:5px;padding:7px;" onclick="UI.saveGasUrl()">儲存並同步試算表</button>
       </div>
-      <div style="font-size:12px;margin-bottom:12px;">
-        <strong>匯出單機存檔碼（換機備份用）：</strong>
+      <div style="font-size:11px;margin-bottom:10px;">
+        <strong>匯出單機存檔碼：</strong>
         <textarea rows="2" readonly style="margin-top:4px;">${exportStr}</textarea>
       </div>
-      <div style="font-size:12px;margin-bottom:14px;">
-        <strong>匯入存檔碼還原進度：</strong>
+      <div style="font-size:11px;margin-bottom:12px;">
+        <strong>匯入存檔碼還原：</strong>
         <input type="text" id="input-import-code" placeholder="貼上存檔碼..." style="margin-top:4px;" />
-        <button class="action-btn secondary" style="margin-top:6px;padding:7px;" onclick="UI.handleImport()">還原存檔</button>
+        <button class="action-btn secondary" style="margin-top:5px;padding:7px;" onclick="UI.handleImport()">還原存檔</button>
       </div>
       <button class="action-btn" id="btn-confirm-reset" style="background:var(--red);" onclick="UI.handleResetClick(this)">
         🗑️ 清除進度並重新開始
@@ -1739,28 +1910,26 @@ const UI = {
     localStorage.removeItem(ConfigLoader.CACHE_KEY);
     ConfigLoader.init(() => {
       UI.renderAll();
-      UI.showToast("已成功連接並同步 Google Sheet 數據！");
+      UI.showToast("已同步 Google Sheet 最新數據！");
     });
   },
 
   handleImport() {
-    const code = document.getElementById("input-import-code").value;
-    const loaded = SaveManager.importCode(code);
+    const loaded = SaveManager.importCode(document.getElementById("input-import-code").value);
     if (loaded) {
       Game.state = loaded;
-      Game.resetDailyTempState();
       UI.closeModal();
-      UI.renderAll();
+      Game.startMorning(false);
       UI.showToast("存檔還原成功！");
     } else {
-      UI.showToast("存檔碼無效，請檢查有冇漏字！");
+      UI.showToast("存檔碼無效！");
     }
   },
 
   handleResetClick(btn) {
     if (!btn.dataset.armed) {
       btn.dataset.armed = "1";
-      btn.textContent = "⚠️ 確定清空所有進度開新局？再撳一次確認";
+      btn.textContent = "⚠️ 確定清空進度開新局？再撳一次確認";
       return;
     }
     SaveManager.clear();
