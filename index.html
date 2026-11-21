@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>白手起家：街角創業錄 v3.0</title>
+  <title>白手起家：街角創業錄 v3.2</title>
   <style>
     :root {
       --bg-app: #f3ede2;
@@ -204,32 +204,47 @@
       cursor: pointer;
     }
 
-    /* 盤前開舖遮罩按鈕 */
-    .open-shop-overlay {
+    /* 盤前開舖 & 打烊後補貨遮罩按鈕 */
+    .stage-action-overlay {
       position: absolute;
       inset: 0;
-      background: rgba(25, 18, 14, 0.42);
+      background: rgba(25, 18, 14, 0.45);
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       gap: 8px;
       backdrop-filter: blur(1.5px);
+      padding: 0 16px;
+      text-align: center;
     }
 
-    .btn-open-shop {
+    .btn-stage-primary {
       background: linear-gradient(135deg, #1f8a5b, #156e47);
       color: #fff;
       border: 2px solid #a7f3d0;
-      padding: 12px 24px;
+      padding: 11px 22px;
       border-radius: 99px;
-      font-size: 15px;
+      font-size: 14px;
       font-weight: 800;
       box-shadow: 0 8px 20px rgba(0,0,0,0.35);
       cursor: pointer;
       transition: transform 0.1s;
     }
-    .btn-open-shop:active { transform: scale(0.96); }
+    .btn-stage-primary.night {
+      background: linear-gradient(135deg, #c86d2d, #9a4d17);
+      border-color: #fed7aa;
+    }
+    .btn-stage-primary:active { transform: scale(0.96); }
+
+    .stage-hint-pill {
+      color: #fff;
+      font-size: 11px;
+      background: rgba(0, 0, 0, 0.72);
+      padding: 4px 12px;
+      border-radius: 99px;
+      line-height: 1.4;
+    }
 
     /* 狀態 Buff/Debuff 橫條 */
     .status-strip {
@@ -411,6 +426,22 @@
     .action-btn:disabled { background: #cbbcb3; cursor: not-allowed; }
     .action-btn.secondary { background: #4b3e37; }
 
+    .equip-btn-row {
+      display: flex;
+      gap: 6px;
+    }
+    .btn-sell-mini {
+      background: #f3f4f6;
+      color: #4b5563;
+      border: 1px solid #d1d5db;
+      border-radius: 10px;
+      padding: 0 10px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
     /* 彈窗 Modal */
     .modal-backdrop {
       position: fixed;
@@ -515,8 +546,8 @@
         <span class="hud-val" id="ui-cash">$8,000</span>
       </div>
       <div class="hud-box">
-        <span class="hud-lbl">今日營業額</span>
-        <span class="hud-val good" id="ui-today-rev">$0</span>
+        <span class="hud-lbl">預計今日客流</span>
+        <span class="hud-val good" id="ui-est-demand">約 30 人</span>
       </div>
       <div class="hud-box">
         <span class="hud-lbl">今日固定開支</span>
@@ -533,19 +564,26 @@
   <div class="stage-wrap">
     <canvas id="shop-canvas"></canvas>
     <div class="clock-overlay">
-      <span id="ui-clock">🕒 08:00 (準備中)</span>
-      <span id="ui-rush" class="rush-badge" style="display:none;">🔥 繁忙高峰</span>
+      <span id="ui-clock">🕒 08:00 (盤前準備)</span>
+      <span id="ui-rush" class="rush-badge" style="display:none;">🔥 大客流洪峰</span>
       <span id="ui-closing" class="closing-badge" style="display:none;">🧹 截單清客中</span>
     </div>
     <div class="stage-tools">
       <button class="mini-pill-btn" onclick="UI.openEndings()">🎯 版圖</button>
       <button class="mini-pill-btn" onclick="UI.openSettings()">⚙️ 設定</button>
     </div>
+
     <!-- 盤前手動開舖遮罩 -->
-    <div class="open-shop-overlay" id="ui-open-overlay">
-      <button class="btn-open-shop" onclick="Game.openShopForBusiness()">🏪 掛牌開舖營業</button>
-      <span style="color:#fff;font-size:11px;background:rgba(0,0,0,0.65);padding:3px 10px;border-radius:99px;">
-        可先檢查今日原材料庫存、訂購明日貨源或添置設備
+    <div class="stage-action-overlay" id="ui-open-overlay">
+      <button class="btn-stage-primary" onclick="Game.openShopForBusiness()">🏪 掛牌開舖營業</button>
+      <span class="stage-hint-pill" id="ui-prep-hint">確認今日原材料與設備出餐速度後，即可開門迎客</span>
+    </div>
+
+    <!-- 打烊後盤點補貨遮罩 -->
+    <div class="stage-action-overlay" id="ui-afterhours-overlay" style="display:none;">
+      <button class="btn-stage-primary night" onclick="Game.confirmEndOfDayAndAdvance()">🚚 結束今日並接收明日貨源</button>
+      <span class="stage-hint-pill" id="ui-afterhours-hint">
+        現在是打烊後盤點時間：請先喺下方「📦 原料與倉儲」預訂明日貨源，再按上方按鈕進入下一日
       </span>
     </div>
   </div>
@@ -558,13 +596,13 @@
     <!-- 即時調價 -->
     <div class="price-bar">
       <div class="price-opt" id="strat-0.85" onclick="Game.setPriceMult(0.85)">
-        🏷️ 薄利促銷 (85%)<br><small style="color:var(--text-muted)">吸引更多街客入店</small>
+        🏷️ 薄利促銷 (85%)<br><small style="color:var(--text-muted)">客流 +25% 衝銷量</small>
       </div>
       <div class="price-opt active" id="strat-1" onclick="Game.setPriceMult(1)">
         ⚖️ 標準定價 (100%)<br><small style="color:var(--text-muted)">客流與毛利平衡</small>
       </div>
       <div class="price-opt" id="strat-1.15" onclick="Game.setPriceMult(1.15)">
-        👑 精品溢價 (115%)<br><small style="color:var(--text-muted)">減緩排隊提升毛利</small>
+        👑 精品溢價 (115%)<br><small style="color:var(--text-muted)">客流 -20% 減壓增利</small>
       </div>
     </div>
 
@@ -600,9 +638,9 @@ const FALLBACK_CONFIG = {
   meta: {
     config_version: "1.0.0",
     base_daily_rent: 300,
-    base_daily_demand: 35,
+    base_daily_demand: 28,
     spoilage_rate: 0.6,
-    weekend_demand_mult: 1.5
+    weekend_demand_mult: 1.45
   },
   difficulties: [
     { diff_id: "easy", name: "天使護航（簡單）", start_cash: 10000, max_loans: 2, loan_buffer: 3000, interest_rate: 0.1, repay_days: 10 },
@@ -616,33 +654,32 @@ const FALLBACK_CONFIG = {
     { prod_id: "prod_04", name: "精品手沖藝伎", sell_price: 68, unit_cost: 20, prep_load: 3, is_perishable: false, unlock_day: 7 }
   ],
   equipment: [
-    { equip_id: "eq_01", name: "基礎半自動咖啡機", buy_cost: 0, daily_opex: 50, daily_capacity: 40, breakdown_chance: 0.05, unlock_day: 1 },
-    { equip_id: "eq_02", name: "雙頭商用濃縮機", buy_cost: 6500, daily_opex: 140, daily_capacity: 90, breakdown_chance: 0.03, unlock_day: 1 },
-    { equip_id: "eq_03", name: "商用旋風焗爐", buy_cost: 5000, daily_opex: 120, daily_capacity: 60, breakdown_chance: 0.04, unlock_day: 3 },
-    { equip_id: "eq_04", name: "全自動智能咖啡系統", buy_cost: 18000, daily_opex: 280, daily_capacity: 180, breakdown_chance: 0.01, unlock_day: 8 }
+    { equip_id: "eq_01", name: "基礎半自動咖啡機", buy_cost: 1800, daily_opex: 45, daily_capacity: 40, breakdown_chance: 0.05, unlock_day: 1 },
+    { equip_id: "eq_02", name: "雙頭商用濃縮機", buy_cost: 5500, daily_opex: 110, daily_capacity: 95, breakdown_chance: 0.03, unlock_day: 1 },
+    { equip_id: "eq_03", name: "高速熱風烘焙出餐站", buy_cost: 6800, daily_opex: 130, daily_capacity: 115, breakdown_chance: 0.04, unlock_day: 3 },
+    { equip_id: "eq_04", name: "全自動智能咖啡系統", buy_cost: 15000, daily_opex: 240, daily_capacity: 210, breakdown_chance: 0.01, unlock_day: 6 }
   ],
   statuses: [
     { status_id: "st_sunny", name: "晴朗好天氣", type: "BUFF", target_stat: "DEMAND", modifier_val: 1.2, duration_days: 1, desc: "街頭人流暢旺，自然客流 +20%" },
     { status_id: "st_zero_shortage", name: "零缺貨口碑", type: "BUFF", target_stat: "DEMAND", modifier_val: 1.15, duration_days: 2, desc: "連續無斷貨，回頭客增加，客流 +15%" },
     { status_id: "st_vip_supplier", name: "供應商 VIP 折扣", type: "BUFF", target_stat: "UNIT_COST", modifier_val: 0.9, duration_days: 1, desc: "現金流充裕獲得批發折扣，原料成本 -10%" },
-    { status_id: "st_rainstorm", name: "暴雨預警", type: "DEBUFF", target_stat: "DEMAND", modifier_val: 0.55, duration_days: 1, desc: "惡劣天氣影響出行，客流大幅減少 45%" },
-    { status_id: "st_bad_review", name: "排隊負評發酵", type: "DEBUFF", target_stat: "DEMAND", modifier_val: 0.75, duration_days: 3, desc: "產能不足導致客人流失，客流 -25%" },
+    { status_id: "st_rainstorm", name: "暴雨預警", type: "DEBUFF", target_stat: "DEMAND", modifier_val: 0.65, duration_days: 1, desc: "惡劣天氣影響出行，客流減少 35%" },
+    { status_id: "st_bad_review", name: "排隊負評發酵", type: "DEBUFF", target_stat: "DEMAND", modifier_val: 0.78, duration_days: 2, desc: "出餐太慢導致客人流失，客流 -22%" },
     { status_id: "st_credit_tight", name: "信貸緊縮交收", type: "DEBUFF", target_stat: "UNIT_COST", modifier_val: 1.1, duration_days: 7, desc: "背負緊急貸款期間，原料入貨成本 +10%" },
-    { status_id: "st_kol_hype", name: "網紅打卡熱潮", type: "MIXED", target_stat: "DEMAND", modifier_val: 1.6, duration_days: 2, desc: "客流暴增 +60%，但同時消耗雙倍設備損耗" }
+    { status_id: "st_kol_hype", name: "網紅打卡熱潮", type: "MIXED", target_stat: "DEMAND", modifier_val: 1.5, duration_days: 2, desc: "客流暴增 +50%，考驗吧台出餐極限" }
   ],
   decisionCards: [
     { card_id: "card_01", title: "美食博主探店邀約", desc: "擁有十萬粉絲嘅本地博主提出免費試食換取推薦貼文。", min_day: 4, opt_a_text: "免費招待（現金 -$400，獲得 2 日網紅熱潮）", opt_a_effect: "CASH:-400;STATUS:st_kol_hype", opt_b_text: "婉拒合作，專注日常營運", opt_b_effect: "NONE" },
-    { card_id: "card_02", title: "咖啡豆商清倉特賣", desc: "批發商有一批即期優質咖啡豆以六折出清，適合今日落單補貨。", min_day: 4, opt_a_text: "斥資 $800 簽約（今日訂貨原料成本 -35%）", opt_a_effect: "CASH:-800;TEMP_COST:0.65", opt_b_text: "按原價正常訂貨，保持穩健", opt_b_effect: "NONE" },
-    { card_id: "card_03", title: "寫字樓下午茶急單", desc: "附近公司臨時需要大量下午茶，準時交貨有豐厚獎金。", min_day: 6, opt_a_text: "接下急單（今日需額外應付企業外賣，達標獎 +$2200）", opt_a_effect: "CONTRACT:8:2200:800", opt_b_text: "人手吃緊，放棄今次訂單", opt_b_effect: "NONE" }
+    { card_id: "card_02", title: "咖啡豆商清倉特賣", desc: "批發商有一批即期優質咖啡豆以六五折出清，適合今日落單補貨。", min_day: 4, opt_a_text: "斥資 $800 簽約（今日訂貨原料成本 -35%）", opt_a_effect: "CASH:-800;TEMP_COST:0.65", opt_b_text: "按原價正常訂貨，保持穩健", opt_b_effect: "NONE" },
+    { card_id: "card_03", title: "寫字樓下午茶急單", desc: "附近公司臨時需要大量下午茶，準時交貨有豐厚獎金。", min_day: 6, opt_a_text: "接下急單（今日需完成 10 單成交，達標獎 +$2200）", opt_a_effect: "CONTRACT:10:2200:800", opt_b_text: "產能吃緊，放棄今次訂單", opt_b_effect: "NONE" }
   ],
   endings: [
     { ending_id: "end_artisan", title: "匠心傳奇・精品名店", desc: "堅守單店品質，以極高口碑與毛利率成為城市地標。", req_stores: 1, req_cash: 100000, req_rep: 95, req_margin: 0.65, max_day: 999, req_total_rev: 0 },
-    { ending_id: "end_empire", title: "商業霸主・連鎖帝國", desc: "成功駕馭多店高租金與人員管理，建立跨區連鎖版圖。", req_stores: 3, req_cash: 50000, req_rep: 75, req_margin: 0.45, max_day: 999, req_total_rev: 350000 },
+    { ending_id: "end_empire", title: "商業霸主・連鎖帝國", desc: "成功駕馭多店高租金與大客流管理，建立跨區連鎖版圖。", req_stores: 3, req_cash: 50000, req_rep: 75, req_margin: 0.45, max_day: 999, req_total_rev: 350000 },
     { ending_id: "end_acquisition", title: "資本新星・天價併購", desc: "喺 25 日內極速做大企業估值，獲大型集團高價收購套現。", req_stores: 1, req_cash: 120000, req_rep: 85, req_margin: 0.55, max_day: 25, req_total_rev: 150000 }
   ]
 };
 
-// 原材料與配方定義（自動對應你 Google Sheet 嘅 4 款商品）
 const INGREDIENTS = [
   { ing_id: "ing_bean", name: "精品意式咖啡豆", icon: "🫘", space: 1, base_cost: 6, is_perishable: false, unlock_day: 1 },
   { ing_id: "ing_milk", name: "冷藏鮮牛奶", icon: "🥛", space: 2, base_cost: 5, is_perishable: true, unlock_day: 1 },
@@ -650,7 +687,6 @@ const INGREDIENTS = [
   { ing_id: "ing_geisha", name: "手沖藝伎莊園豆", icon: "✨", space: 1, base_cost: 20, is_perishable: false, unlock_day: 7 }
 ];
 
-// 每款商品製作時消耗嘅原材料配方
 const RECIPES = {
   prod_01: { label: "招牌手沖美式", icon: "☕", req: { ing_bean: 1 } },
   prod_02: { label: "絲滑鮮奶拿鐵", icon: "🥤", req: { ing_bean: 1, ing_milk: 1 } },
@@ -658,12 +694,18 @@ const RECIPES = {
   prod_04: { label: "精品手沖藝伎", icon: "✨", req: { ing_geisha: 1 } }
 };
 
-// 冰箱冷庫設備清單
+// 冰箱冷庫設備（全部需付費購買，佔用店鋪冷庫機位）
 const FRIDGES = [
-  { fridge_id: "fr_01", name: "基礎單門雪櫃", buy_cost: 0, daily_opex: 30, capacity: 60, unlock_day: 1 },
-  { fridge_id: "fr_02", name: "商用雙門立式雪櫃", buy_cost: 3500, daily_opex: 75, capacity: 90, unlock_day: 1 },
-  { fridge_id: "fr_03", name: "大型步入式冷庫", buy_cost: 9500, daily_opex: 160, capacity: 200, unlock_day: 4 }
+  { fridge_id: "fr_01", name: "基礎單門雪櫃", buy_cost: 1200, daily_opex: 25, capacity: 50, unlock_day: 1 },
+  { fridge_id: "fr_02", name: "商用雙門立式雪櫃", buy_cost: 3600, daily_opex: 65, capacity: 140, unlock_day: 1 },
+  { fridge_id: "fr_03", name: "大型步入式冷庫", buy_cost: 9000, daily_opex: 140, capacity: 350, unlock_day: 4 }
 ];
+
+// 每間店鋪嘅物理機位上限（逼使玩家升級高階設備）
+const SLOTS_PER_STORE = {
+  EQUIP: 4,   // 每間店最多放 4 台吧台設備
+  FRIDGE: 3   // 每間店最多放 3 台冰箱冷庫
+};
 
 /**
  * ============================================================
@@ -686,7 +728,10 @@ const ConfigLoader = {
   init(onUpdated) {
     const cached = localStorage.getItem(this.CACHE_KEY);
     if (cached) {
-      try { this.current = JSON.parse(cached); } catch (e) {}
+      try {
+        const parsed = JSON.parse(cached);
+        this.mergeConfig(parsed);
+      } catch (e) {}
     }
     const gasUrl = this.getGasUrl();
     if (!gasUrl) return;
@@ -696,8 +741,8 @@ const ConfigLoader = {
       .then(data => {
         if (data && data.meta && Array.isArray(data.products)) {
           const oldVer = this.current.meta?.config_version;
-          this.current = data;
-          localStorage.setItem(this.CACHE_KEY, JSON.stringify(data));
+          this.mergeConfig(data);
+          localStorage.setItem(this.CACHE_KEY, JSON.stringify(this.current));
           if (oldVer !== data.meta.config_version) {
             UI.showToast(`已同步最新數值表 v${data.meta.config_version}`);
           }
@@ -705,6 +750,19 @@ const ConfigLoader = {
         }
       })
       .catch(() => {});
+  },
+
+  // 確保即使舊 Google Sheet 寫咗 buy_cost=0，亦唔會出現免費無限複製漏洞
+  mergeConfig(remote) {
+    this.current = { ...this.current, ...remote };
+    if (Array.isArray(this.current.equipment)) {
+      this.current.equipment = this.current.equipment.map(eq => {
+        if (eq.equip_id === "eq_01" && Number(eq.buy_cost) === 0) {
+          return { ...eq, buy_cost: 1800, daily_capacity: 40 };
+        }
+        return eq;
+      });
+    }
   }
 };
 
@@ -773,17 +831,17 @@ const VisualStage = {
       for (let i = 0; i < count; i++) desiredList.push(eq);
     });
 
-    while (this.machines.length < desiredList.length) {
-      const eq = desiredList[this.machines.length];
-      this.machines.push({
+    this.machines = desiredList.map((eq, idx) => {
+      const prev = this.machines[idx];
+      return {
         equip_id: eq.equip_id,
         name: eq.name,
         capacity: Number(eq.daily_capacity),
-        busyCustomer: null,
-        progress: 0,
+        busyCustomer: prev && prev.equip_id === eq.equip_id ? prev.busyCustomer : null,
+        progress: prev && prev.equip_id === eq.equip_id ? prev.progress : 0,
         duration: 2.0
-      });
-    }
+      };
+    });
   },
 
   resetForNewDay() {
@@ -811,8 +869,8 @@ const VisualStage = {
       targetX: 85,
       targetY: 132,
       color: colors[Math.floor(Math.random() * colors.length)],
-      patience: 15,
-      maxPatience: 15,
+      patience: 14,
+      maxPatience: 14,
       moodIcon: rec.icon
     });
   },
@@ -825,8 +883,7 @@ const VisualStage = {
     if (!Game.state) return;
     const w = this.width;
 
-    // 1. 街外路人
-    if (Math.random() < dt * 0.6 && this.passersby.length < 4) {
+    if (Math.random() < dt * 0.7 && this.passersby.length < 5) {
       const fromLeft = Math.random() < 0.5;
       this.passersby.push({
         x: fromLeft ? -15 : w + 15,
@@ -838,27 +895,24 @@ const VisualStage = {
     this.passersby.forEach(p => p.x += p.vx * dt);
     this.passersby = this.passersby.filter(p => p.x > -30 && p.x < w + 30);
 
-    // 2. 排隊隊伍位置
     const queueCustomers = this.customers.filter(c => c.state === "QUEUE" || c.state === "BREWING");
     queueCustomers.forEach((c, idx) => {
-      c.targetX = 85 + idx * 34;
+      c.targetX = 85 + idx * 32;
       c.targetY = 132;
     });
 
-    // 3. 更新客人狀態
     this.customers.forEach(c => {
       if (c.state === "WALK_IN") {
-        c.targetX = 85 + queueCustomers.length * 34;
+        c.targetX = 85 + queueCustomers.length * 32;
         c.targetY = 132;
-        this.moveTowards(c, c.targetX, c.targetY, 75 * dt);
+        this.moveTowards(c, c.targetX, c.targetY, 80 * dt);
         if (Math.hypot(c.x - c.targetX, c.y - c.targetY) < 4) c.state = "QUEUE";
       } else if (c.state === "QUEUE") {
-        this.moveTowards(c, c.targetX, c.targetY, 60 * dt);
+        this.moveTowards(c, c.targetX, c.targetY, 65 * dt);
         c.patience -= dt;
 
         const qIndex = queueCustomers.indexOf(c);
         if (qIndex >= 0 && qIndex < this.machines.length) {
-          // 檢查原材料是否足夠製作該商品
           if (!Game.canCraftProduct(c.product.prod_id)) {
             c.state = "LEAVE_ANGRY";
             c.moodIcon = "❌缺料";
@@ -873,27 +927,27 @@ const VisualStage = {
             c.state = "BREWING";
             freeMachine.busyCustomer = c;
             freeMachine.progress = 0;
-            const speedFactor = Math.max(0.5, freeMachine.capacity / 45);
-            freeMachine.duration = Math.max(0.8, (Number(c.product.prep_load) * 1.6) / speedFactor);
+            // 高階設備（如雙頭濃縮機 95、全自動系統 210）出餐速度顯著倍增
+            const speedFactor = Math.max(0.7, freeMachine.capacity / 40);
+            freeMachine.duration = Math.max(0.45, (Number(c.product.prep_load) * 1.55) / speedFactor);
           }
         }
 
         if (c.state === "QUEUE" && c.patience <= 0) {
           c.state = "LEAVE_ANGRY";
-          c.moodIcon = "💢等太耐";
+          c.moodIcon = "💢太慢";
           Game.onCustomerFail("QUEUE");
-          this.addFloatText("等太耐! -1口碑", c.x, c.y - 24, "#f87171");
+          this.addFloatText("排太耐! -1口碑", c.x, c.y - 24, "#f87171");
         }
       } else if (c.state === "BREWING") {
-        this.moveTowards(c, c.targetX, c.targetY, 60 * dt);
+        this.moveTowards(c, c.targetX, c.targetY, 65 * dt);
       } else if (c.state === "LEAVE_HAPPY" || c.state === "LEAVE_ANGRY") {
-        this.moveTowards(c, w + 30, 185, 85 * dt);
+        this.moveTowards(c, w + 30, 185, 90 * dt);
       }
     });
 
     this.customers = this.customers.filter(c => c.x < w + 22);
 
-    // 4. 更新吧台機器沖煮
     this.machines.forEach(m => {
       if (m.busyCustomer) {
         m.progress += dt;
@@ -911,7 +965,6 @@ const VisualStage = {
       }
     });
 
-    // 5. 飄浮文字
     this.floatTexts.forEach(ft => {
       ft.y -= 22 * dt;
       ft.life -= dt;
@@ -940,13 +993,11 @@ const VisualStage = {
 
     ctx.clearRect(0, 0, w, h);
 
-    // 1. 店內背景牆面
     ctx.fillStyle = "#f5ead8";
     ctx.fillRect(0, 0, w, 162);
     ctx.fillStyle = "#e3d2b9";
     ctx.fillRect(0, 42, w, 6);
 
-    // 價目黑板
     ctx.fillStyle = "#2c3531";
     this.roundRect(ctx, 16, 48, 76, 36, 5, true);
     ctx.fillStyle = "#f3f4f6";
@@ -955,33 +1006,30 @@ const VisualStage = {
     ctx.fillStyle = "#fbbf24";
     ctx.fillText(`口碑 ★${Game.state ? Game.state.reputation : 50}`, 24, 75);
 
-    // 吧台右側雪櫃視覺展示
     const fridgeCount = Game.state ? Object.values(Game.state.fridgesOwned || {}).reduce((a, b) => a + b, 0) : 1;
-    for (let f = 0; f < Math.min(fridgeCount, 3); f++) {
-      const fx = w - 34 - f * 24;
+    for (let f = 0; f < Math.min(fridgeCount, 4); f++) {
+      const fx = w - 34 - f * 22;
       ctx.fillStyle = "#e2e8f0";
-      this.roundRect(ctx, fx, 54, 18, 32, 3, true);
+      this.roundRect(ctx, fx, 54, 17, 32, 3, true);
       ctx.strokeStyle = "#94a3b8";
-      ctx.strokeRect(fx, 54, 18, 32);
+      ctx.strokeRect(fx, 54, 17, 32);
       ctx.fillStyle = "#38bdf8";
-      ctx.fillRect(fx + 3, 58, 12, 10);
+      ctx.fillRect(fx + 3, 58, 11, 10);
     }
 
-    // 2. 咖啡吧台
     ctx.fillStyle = "#8c583a";
     ctx.fillRect(12, 86, w - 24, 24);
     ctx.fillStyle = "#5c3824";
     ctx.fillRect(12, 106, w - 24, 6);
 
-    // 3. 機器與製作進度條
     const maxVisible = Math.min(this.machines.length, 6);
-    const slotW = Math.min(54, (w - 95) / Math.max(1, maxVisible));
+    const slotW = Math.min(54, (w - 115) / Math.max(1, maxVisible));
     for (let i = 0; i < maxVisible; i++) {
       const m = this.machines[i];
       const mx = 22 + i * slotW;
       const my = 66;
 
-      ctx.fillStyle = m.equip_id === "eq_04" ? "#3b82f6" : m.equip_id === "eq_02" ? "#d97706" : m.equip_id === "eq_03" ? "#6b7280" : "#4b5563";
+      ctx.fillStyle = m.equip_id === "eq_04" ? "#2563eb" : m.equip_id === "eq_02" ? "#d97706" : m.equip_id === "eq_03" ? "#7c3aed" : "#4b5563";
       this.roundRect(ctx, mx, my, 32, 22, 4, true);
 
       ctx.fillStyle = m.busyCustomer ? "#fbbf24" : "#34d399";
@@ -998,7 +1046,6 @@ const VisualStage = {
       }
     }
 
-    // 4. 地板與街道
     ctx.fillStyle = "#e8d8c0";
     ctx.fillRect(0, 112, w, 50);
     ctx.fillStyle = "#6b7280";
@@ -1006,7 +1053,6 @@ const VisualStage = {
     ctx.fillStyle = "#9ca3af";
     ctx.fillRect(0, 162, w, 4);
 
-    // 店門招牌狀態（PREP / OPEN / LAST ORDER）
     const phase = Game.phase || "PREP";
     ctx.fillStyle = phase === "OPEN" ? "#1f8a5b" : phase === "CLOSING" ? "#d97706" : "#4b5563";
     ctx.fillRect(10, 158, 56, 9);
@@ -1014,14 +1060,12 @@ const VisualStage = {
     ctx.font = "bold 7.5px sans-serif";
     ctx.fillText(phase === "OPEN" ? "OPEN" : phase === "CLOSING" ? "LAST ORDER" : "CLOSED", 14, 165);
 
-    // 5. 路人與店內客人
     this.passersby.forEach(p => this.drawPerson(ctx, p.x, p.y, p.color, null, 1, false));
     this.customers.forEach(c => {
       const patRatio = c.state === "QUEUE" ? Math.max(0, c.patience / c.maxPatience) : 1;
       this.drawPerson(ctx, c.x, c.y, c.color, c.moodIcon, patRatio, c.state === "QUEUE");
     });
 
-    // 6. 飄浮金額
     this.floatTexts.forEach(ft => {
       ctx.globalAlpha = Math.min(1, ft.life);
       ctx.font = "bold 12px sans-serif";
@@ -1075,12 +1119,12 @@ const VisualStage = {
 
 /**
  * ============================================================
- * 4. Game：供應鏈與營業流程引擎
+ * 4. Game：供應鏈、空間限制與大客流成長引擎
  * ============================================================
  */
 const Game = {
   state: null,
-  phase: "PREP",          // PREP(盤前準備) -> OPEN(正常營業) -> CLOSING(20:00停止新客，清完隊尾先打烊) -> SETTLED
+  phase: "PREP",
   speed: 1,
   DAY_DURATION_SEC: 60,
   dayElapsed: 0,
@@ -1096,7 +1140,7 @@ const Game = {
     served: 0,
     stockouts: 0,
     queueFails: 0,
-    productSales: {} // { prod_01: { qty: 0, rev: 0, profit: 0 } }
+    productSales: {}
   },
 
   WEEKDAYS: ["週一", "週二", "週三", "週四", "週五", "週六", "週日"],
@@ -1110,6 +1154,7 @@ const Game = {
     const saved = SaveManager.load();
     if (saved && !saved.isGameOver) {
       this.state = saved;
+      this.sanitizeLegacySlots();
       this.enterMorningPrep(false);
     } else {
       UI.openDifficultyModal();
@@ -1117,6 +1162,20 @@ const Game = {
 
     this.lastFrameTime = performance.now();
     requestAnimationFrame((t) => this.loop(t));
+  },
+
+  // 修正舊存檔中因免費漏洞買過多基礎機而超出單店上限的情況
+  sanitizeLegacySlots() {
+    const maxFridge = this.state.stores * SLOTS_PER_STORE.FRIDGE;
+    const maxEquip = this.state.stores * SLOTS_PER_STORE.EQUIP;
+    let curFridge = Object.values(this.state.fridgesOwned || {}).reduce((a, b) => a + b, 0);
+    if (curFridge > maxFridge && (this.state.fridgesOwned.fr_01 || 0) > 1) {
+      this.state.fridgesOwned.fr_01 = Math.max(1, maxFridge - (curFridge - this.state.fridgesOwned.fr_01));
+    }
+    let curEquip = Object.values(this.state.equipmentOwned || {}).reduce((a, b) => a + b, 0);
+    if (curEquip > maxEquip && (this.state.equipmentOwned.eq_01 || 0) > 1) {
+      this.state.equipmentOwned.eq_01 = Math.max(1, maxEquip - (curEquip - this.state.equipmentOwned.eq_01));
+    }
   },
 
   startNewGame(diffId) {
@@ -1134,11 +1193,11 @@ const Game = {
       remainingDebt: 0,
       dailyLoanRepayment: 0,
       zeroShortageStreak: 0,
-      equipmentOwned: { eq_01: 1 },
-      fridgesOwned: { fr_01: 1 },
-      ingredients: { ing_bean: 25, ing_milk: 12, ing_dough: 0, ing_geisha: 0 }, // 開局首批到貨原料
-      pendingDelivery: { ing_bean: 0, ing_milk: 0, ing_dough: 0, ing_geisha: 0 }, // 今日訂購、明日送達
-      productLifetimeStats: {}, // 累計單品銷量與毛利排行
+      equipmentOwned: { eq_01: 1 }, // 開局贈送 1 台基礎咖啡機
+      fridgesOwned: { fr_01: 1 },   // 開局贈送 1 台基礎雪櫃
+      ingredients: { ing_bean: 25, ing_milk: 12, ing_dough: 0, ing_geisha: 0 },
+      pendingDelivery: { ing_bean: 0, ing_milk: 0, ing_dough: 0, ing_geisha: 0 },
+      productLifetimeStats: {},
       activeStatuses: [],
       marginHistory: [],
       historyLogs: [],
@@ -1148,7 +1207,7 @@ const Game = {
     SaveManager.save(this.state);
     UI.closeModal();
     this.enterMorningPrep(true);
-    UI.showToast(`已開啟「${diff.name}」！請先確認庫存後按「掛牌開舖營業」`);
+    UI.showToast(`已開啟「${diff.name}」！準備好後按「掛牌開舖營業」`);
   },
 
   enterMorningPrep(isBrandNew) {
@@ -1162,13 +1221,13 @@ const Game = {
     VisualStage.resetForNewDay();
 
     document.getElementById("ui-open-overlay").style.display = "flex";
+    document.getElementById("ui-afterhours-overlay").style.display = "none";
     document.getElementById("ui-clock").textContent = "🕒 08:00 (盤前準備)";
     document.getElementById("ui-rush").style.display = "none";
     document.getElementById("ui-closing").style.display = "none";
     this.updateSpeedButtons();
     UI.renderAll();
 
-    // 第 4 日起有機會彈出盤前二選一抉擇卡
     if (!isBrandNew && this.state.day >= 4 && (this.state.day % 2 === 0 || Math.random() < 0.5)) {
       const eligible = ConfigLoader.current.decisionCards.filter(c => Number(c.min_day) <= this.state.day);
       if (eligible.length > 0) {
@@ -1178,11 +1237,10 @@ const Game = {
     }
   },
 
-  // 玩家手動按下「掛牌開舖營業」
   openShopForBusiness() {
     if (this.phase !== "PREP") return;
     this.phase = "OPEN";
-    this.spawnTimer = 0.5;
+    this.spawnTimer = 0.4;
     document.getElementById("ui-open-overlay").style.display = "none";
     this.setSpeed(1);
     UI.showToast("🏪 正式開舖營業！客人陸續進店");
@@ -1210,12 +1268,12 @@ const Game = {
         if (this.spawnTimer <= 0 && progress < 0.98) {
           this.spawnNextCustomer();
           const dailyDemand = this.getEstimatedDemand();
-          const avgInterval = this.DAY_DURATION_SEC / Math.max(8, dailyDemand);
-          const rushMult = isRush ? 0.55 : 1.25;
-          this.spawnTimer = avgInterval * rushMult * (0.75 + Math.random() * 0.5);
+          const avgInterval = this.DAY_DURATION_SEC / Math.max(10, dailyDemand);
+          // 洪峰時段客人湧入密度提升 3 倍，考驗設備出餐速度與排隊承受力
+          const rushMult = isRush ? 0.36 : 1.35;
+          this.spawnTimer = avgInterval * rushMult * (0.7 + Math.random() * 0.5);
         }
 
-        // 到達 20:00 -> 進入「停止新客、清完隊尾」階段
         if (this.dayElapsed >= this.DAY_DURATION_SEC) {
           this.phase = "CLOSING";
           document.getElementById("ui-clock").textContent = "🕒 20:00 (截單)";
@@ -1227,7 +1285,6 @@ const Game = {
 
       VisualStage.update(dt);
 
-      // 當處於 CLOSING 且店內所有客人都完成結帳離開，正式打烊結算！
       if (this.phase === "CLOSING" && !VisualStage.hasActiveCustomers()) {
         this.endOfDaySettlement();
       }
@@ -1237,20 +1294,30 @@ const Game = {
     requestAnimationFrame((t) => this.loop(t));
   },
 
+  // 兩波大客流洪峰：午市 (12:00-14:00) 與 下午茶 (15:30-17:30)
   isRushHour(progress) {
-    return (progress >= 0.33 && progress <= 0.50) || (progress >= 0.58 && progress <= 0.75);
+    return (progress >= 0.33 && progress <= 0.50) || (progress >= 0.62 && progress <= 0.79);
   },
 
   spawnNextCustomer() {
     const unlocked = ConfigLoader.current.products.filter(p => Number(p.unlock_day) <= this.state.day);
     if (unlocked.length === 0) return;
     const craftable = unlocked.filter(p => this.canCraftProduct(p.prod_id));
-    const pool = (craftable.length > 0 && Math.random() < 0.75) ? craftable : unlocked;
+    const pool = (craftable.length > 0 && Math.random() < 0.78) ? craftable : unlocked;
     const chosen = pool[Math.floor(Math.random() * pool.length)];
     VisualStage.spawnCustomer(chosen);
   },
 
-  // 倉儲空間計算（現有庫存 + 明日待收貨 總佔用格數）
+  getSlotStats() {
+    const maxEquipSlots = this.state.stores * SLOTS_PER_STORE.EQUIP;
+    const usedEquipSlots = Object.values(this.state.equipmentOwned || {}).reduce((a, b) => a + b, 0);
+
+    const maxFridgeSlots = this.state.stores * SLOTS_PER_STORE.FRIDGE;
+    const usedFridgeSlots = Object.values(this.state.fridgesOwned || {}).reduce((a, b) => a + b, 0);
+
+    return { maxEquipSlots, usedEquipSlots, maxFridgeSlots, usedFridgeSlots };
+  },
+
   getStorageStats() {
     let totalCapacity = 0;
     FRIDGES.forEach(fr => {
@@ -1275,14 +1342,13 @@ const Game = {
     return Math.max(1, Math.round(ing.base_cost * mult));
   },
 
-  // 訂購原材料（扣今日現金，明日開舖前送達）
   orderIngredientTomorrow(ingId, qty) {
     const ing = INGREDIENTS.find(i => i.ing_id === ingId);
     if (!ing) return;
     const storage = this.getStorageStats();
     const addedSpace = ing.space * qty;
     if (storage.totalReserved + addedSpace > storage.totalCapacity) {
-      UI.showToast(`⚠️ 冰箱冷庫空間不足（剩 ${storage.totalCapacity - storage.totalReserved} 格），請先添置雪櫃！`);
+      UI.showToast(`⚠️ 冰箱冷庫空間不足（剩 ${storage.totalCapacity - storage.totalReserved} 格），請先升級雪櫃！`);
       return;
     }
 
@@ -1298,6 +1364,7 @@ const Game = {
     SaveManager.save(this.state);
     UI.updateHud();
     UI.renderStockTab();
+    this.updateAfterHoursHint();
     UI.showToast(`🚚 已訂購 ${qty} 份${ing.name}，將於明日開舖前送達！`);
   },
 
@@ -1340,7 +1407,6 @@ const Game = {
     this.todayStats.soldCogs += unitCost;
     this.todayStats.served += 1;
 
-    // 記錄單品銷量與毛利排行
     if (!this.todayStats.productSales[product.prod_id]) {
       this.todayStats.productSales[product.prod_id] = { qty: 0, rev: 0, profit: 0 };
     }
@@ -1377,6 +1443,11 @@ const Game = {
   },
 
   buyEquipmentNow(equipId) {
+    const slots = this.getSlotStats();
+    if (slots.usedEquipSlots >= slots.maxEquipSlots) {
+      UI.showToast(`⚠️ 店內吧台機位已滿（${slots.usedEquipSlots}/${slots.maxEquipSlots}），請先淘汰舊機或開分店！`);
+      return;
+    }
     const eq = ConfigLoader.current.equipment.find(e => e.equip_id === equipId);
     if (!eq) return;
     const cost = Number(eq.buy_cost);
@@ -1389,10 +1460,32 @@ const Game = {
     VisualStage.syncMachinesFromState();
     SaveManager.save(this.state);
     UI.renderAll();
-    UI.showToast(`✅ 已添置「${eq.name}」，立即投入吧台運作！`);
+    UI.showToast(`✅ 已添置「${eq.name}」，出餐速度大幅提升！`);
+  },
+
+  sellEquipmentNow(equipId) {
+    const count = this.state.equipmentOwned[equipId] || 0;
+    const totalOwned = Object.values(this.state.equipmentOwned || {}).reduce((a, b) => a + b, 0);
+    if (count <= 0 || totalOwned <= 1) {
+      UI.showToast("店內至少需保留 1 台吧台製作設備！");
+      return;
+    }
+    const eq = ConfigLoader.current.equipment.find(e => e.equip_id === equipId);
+    const refund = Math.round(Number(eq.buy_cost) * 0.5);
+    this.state.equipmentOwned[equipId] -= 1;
+    this.state.cash += refund;
+    VisualStage.syncMachinesFromState();
+    SaveManager.save(this.state);
+    UI.renderAll();
+    UI.showToast(`♻️ 已折舊轉讓 1 台「${eq.name}」，回收現金 +$${refund}，騰出 1 個吧台機位`);
   },
 
   buyFridgeNow(fridgeId) {
+    const slots = this.getSlotStats();
+    if (slots.usedFridgeSlots >= slots.maxFridgeSlots) {
+      UI.showToast(`⚠️ 店內冷庫機位已滿（${slots.usedFridgeSlots}/${slots.maxFridgeSlots}），請先淘汰舊雪櫃或開分店！`);
+      return;
+    }
     const fr = FRIDGES.find(f => f.fridge_id === fridgeId);
     if (!fr) return;
     if (this.state.cash < fr.buy_cost) {
@@ -1406,6 +1499,27 @@ const Game = {
     UI.showToast(`❄️ 已添置「${fr.name}」，冷庫總容量 +${fr.capacity} 格！`);
   },
 
+  sellFridgeNow(fridgeId) {
+    const count = this.state.fridgesOwned[fridgeId] || 0;
+    const totalOwned = Object.values(this.state.fridgesOwned || {}).reduce((a, b) => a + b, 0);
+    if (count <= 0 || totalOwned <= 1) {
+      UI.showToast("店內至少需保留 1 台冰箱冷庫！");
+      return;
+    }
+    const fr = FRIDGES.find(f => f.fridge_id === fridgeId);
+    const storage = this.getStorageStats();
+    if (storage.totalCapacity - fr.capacity < storage.totalReserved) {
+      UI.showToast("⚠️ 目前庫存與待收貨數量超過拆機後剩餘容量，無法拆除！");
+      return;
+    }
+    const refund = Math.round(fr.buy_cost * 0.5);
+    this.state.fridgesOwned[fridgeId] -= 1;
+    this.state.cash += refund;
+    SaveManager.save(this.state);
+    UI.renderAll();
+    UI.showToast(`♻️ 已轉讓 1 台「${fr.name}」，回收現金 +$${refund}，騰出 1 個冷庫位`);
+  },
+
   openNewStoreNow() {
     const cost = this.getNextStoreCost();
     if (this.state.cash < cost) {
@@ -1416,7 +1530,7 @@ const Game = {
     this.state.stores += 1;
     SaveManager.save(this.state);
     UI.renderAll();
-    UI.showToast(`🎉 第 ${this.state.stores} 間分店正式開業！`);
+    UI.showToast(`🎉 第 ${this.state.stores} 間分店開業！獲得額外 4 個吧台機位與 3 個冷庫位`);
   },
 
   getNextStoreCost() {
@@ -1426,17 +1540,17 @@ const Game = {
   },
 
   setSpeed(spd) {
-    if (this.phase === "PREP" && spd > 0) return;
+    if ((this.phase === "PREP" || this.phase === "AFTER_HOURS") && spd > 0) return;
     this.speed = spd;
     this.updateSpeedButtons();
   },
 
   updateSpeedButtons() {
-    const isPrep = this.phase === "PREP";
+    const isPausedPhase = (this.phase === "PREP" || this.phase === "AFTER_HOURS");
     [0, 1, 2].forEach(s => {
       const btn = document.getElementById(`spd-${s}`);
-      btn.disabled = isPrep;
-      btn.classList.toggle("active", !isPrep && s === this.speed);
+      btn.disabled = isPausedPhase;
+      btn.classList.toggle("active", !isPausedPhase && s === this.speed);
     });
   },
 
@@ -1445,6 +1559,7 @@ const Game = {
     [0.85, 1, 1.15].forEach(m => {
       document.getElementById(`strat-${m}`).classList.toggle("active", m === mult);
     });
+    UI.updateHud();
     UI.renderStockTab();
   },
 
@@ -1453,8 +1568,9 @@ const Game = {
     return cfg.difficulties.find(d => d.diff_id === this.state.diffId) || cfg.difficulties[1];
   },
 
+  // 第 1 日係週一，第 6 日(週六)同第 7 日(週日)為週末
   isWeekend() {
-    return ((this.state.day - 1) % 7) >= 4;
+    return ((this.state.day - 1) % 7) >= 5;
   },
 
   getWeekdayName() {
@@ -1487,22 +1603,26 @@ const Game = {
       fridgeOpex += fr.daily_opex * count;
     });
 
-    if (this.state.activeStatuses.some(s => s.status_id === "st_kol_hype")) equipOpex *= 2;
+    if (this.state.activeStatuses.some(s => s.status_id === "st_kol_hype")) equipOpex *= 1.5;
     const rent = Number(cfg.meta.base_daily_rent) * this.state.stores;
     const fixedOpex = rent + equipOpex + fridgeOpex + this.state.dailyLoanRepayment;
     return { totalCapacity, equipOpex, fridgeOpex, rent, fixedOpex };
   },
 
+  // 重構客流曲線：隨營業日數穩定成長（每日 +5.2 自然客流），平日一樣能創造高營收並考驗設備極限
   getEstimatedDemand() {
     const cfg = ConfigLoader.current;
-    let demand = Number(cfg.meta.base_daily_demand);
-    demand *= (1 + (this.state.stores - 1) * 0.8);
-    demand *= (1 + (this.state.reputation - 50) * 0.012);
+    const baseDemand = Number(cfg.meta.base_daily_demand);
+    const dayGrowth = (this.state.day - 1) * 5.2;
+    let demand = baseDemand + dayGrowth;
+
+    demand *= (1 + (this.state.stores - 1) * 0.85);
+    demand *= (1 + (this.state.reputation - 50) * 0.01);
     if (this.isWeekend()) demand *= Number(cfg.meta.weekend_demand_mult);
     demand *= this.getStatusMultiplier("DEMAND");
     if (this.priceMult < 1) demand *= 1.25;
     if (this.priceMult > 1) demand *= 0.80;
-    return Math.max(8, Math.round(demand));
+    return Math.max(12, Math.round(demand));
   },
 
   applyCardEffect(effectStr) {
@@ -1530,16 +1650,14 @@ const Game = {
     else this.state.activeStatuses.push({ status_id: statusId, daysLeft: Number(def.duration_days) });
   },
 
-  // 隊尾全部清完後正式打烊結算
   endOfDaySettlement() {
-    this.phase = "SETTLED";
+    this.phase = "AFTER_HOURS";
     this.setSpeed(0);
 
     const cfg = ConfigLoader.current;
     const fac = this.getFacilityStats();
     const spoilRate = Number(cfg.meta.spoilage_rate);
 
-    // 計算生鮮原材料過期報廢
     let spoilageLoss = 0;
     INGREDIENTS.forEach(ing => {
       const leftover = this.state.ingredients[ing.ing_id] || 0;
@@ -1569,20 +1687,23 @@ const Game = {
 
     let repDelta = 0;
     const notes = [];
-    if (this.todayStats.served >= 8 && this.todayStats.stockouts === 0 && this.todayStats.queueFails <= 1) {
-      repDelta += 3;
+    if (this.todayStats.served >= 10 && this.todayStats.stockouts === 0 && this.todayStats.queueFails <= 2) {
+      repDelta += 4;
       this.state.zeroShortageStreak += 1;
       if (this.state.zeroShortageStreak >= 3) {
         this.addStatus("st_zero_shortage");
-        notes.push("🟢 連續 3 日服務順暢，獲得「零缺貨口碑」");
+        notes.push("🟢 連續 3 日出餐順暢，獲得「零缺貨口碑」");
       }
+    } else if (this.todayStats.served >= 6 && this.todayStats.queueFails <= 3) {
+      repDelta += 1;
+      this.state.zeroShortageStreak = 0;
     } else {
       this.state.zeroShortageStreak = 0;
     }
 
-    if (this.todayStats.queueFails >= 3) {
+    if (this.todayStats.queueFails >= 4) {
       this.addStatus("st_bad_review");
-      notes.push("🔴 今日排隊流失過多，觸發「排隊負評發酵」");
+      notes.push("🔴 今日洪峰排隊流失過多，觸發「排隊負評發酵」（建議升級高階咖啡機）");
     }
 
     if (this.state.cash >= 30000) {
@@ -1594,7 +1715,7 @@ const Game = {
     if (roll < 0.22) {
       this.addStatus("st_sunny");
       notes.push("🟢 預報明日「晴朗好天氣」");
-    } else if (roll > 0.85 && this.state.day >= 3) {
+    } else if (roll > 0.86 && this.state.day >= 3) {
       this.addStatus("st_rainstorm");
       notes.push("🔴 預報明日「暴雨預警」");
     }
@@ -1604,7 +1725,6 @@ const Game = {
     this.state.marginHistory.push(grossMargin);
     if (this.state.marginHistory.length > 7) this.state.marginHistory.shift();
 
-    // 找出今日賣得最多嘅單品
     let topItemName = "無";
     let topItemQty = 0;
     Object.entries(this.todayStats.productSales).forEach(([pid, stat]) => {
@@ -1646,7 +1766,9 @@ const Game = {
     });
   },
 
-  proceedAfterPnL() {
+  enterAfterHoursPrep() {
+    UI.closeModal();
+
     if (this.state.cash < 0) {
       const diff = this.getDifficulty();
       if (this.state.loansUsed < Number(diff.max_loans)) {
@@ -1680,10 +1802,49 @@ const Game = {
       }
     }
 
+    this.showAfterHoursOverlay();
+  },
+
+  showAfterHoursOverlay() {
+    this.phase = "AFTER_HOURS";
+    this.updateSpeedButtons();
+    document.getElementById("ui-clock").textContent = "🕒 21:00 (打烊後點算)";
+    document.getElementById("ui-closing").style.display = "none";
+    document.getElementById("ui-afterhours-overlay").style.display = "flex";
+    this.updateAfterHoursHint();
+    UI.switchTab("stock");
+    UI.showToast("🌙 已進入打烊盤點時間，請先預訂明日貨源！");
+  },
+
+  updateAfterHoursHint() {
+    const hintEl = document.getElementById("ui-afterhours-hint");
+    if (!hintEl || !this.state) return;
+    const pendingList = INGREDIENTS
+      .map(ing => {
+        const q = this.state.pendingDelivery[ing.ing_id] || 0;
+        return q > 0 ? `${ing.name} ×${q}` : null;
+      })
+      .filter(Boolean);
+
+    if (pendingList.length === 0) {
+      hintEl.innerHTML = `⚠️ <strong>目前明日待送達貨單為空！</strong>請先喺下方「📦 原料與倉儲」預訂明日原材料`;
+    } else {
+      hintEl.innerHTML = `📦 明日待送達清單：<strong>${pendingList.join("、")}</strong>（確認無誤即可按上方按鈕進入下一日）`;
+    }
+  },
+
+  confirmEndOfDayAndAdvance() {
+    const totalPending = Object.values(this.state.pendingDelivery || {}).reduce((a, b) => a + b, 0);
+    const totalCurrent = Object.values(this.state.ingredients || {}).reduce((a, b) => a + b, 0);
+    if (totalPending === 0 && totalCurrent === 0 && !this._warnedEmpty) {
+      this._warnedEmpty = true;
+      UI.showToast("⚠️ 你仲未訂購任何明日貨源，聽日將會無貨賣！確定要直接過日請再按一次");
+      return;
+    }
+    this._warnedEmpty = false;
     this.advanceToNextDay();
   },
 
-  // 進入下一朝：昨日訂購嘅原材料正式送達入庫！
   advanceToNextDay() {
     this.state.day += 1;
     let deliveredSummary = [];
@@ -1700,7 +1861,7 @@ const Game = {
     UI.closeModal();
     this.enterMorningPrep(false);
     if (deliveredSummary.length > 0) {
-      UI.showToast(`🚚 今日早班貨車已送達：${deliveredSummary.join("、")}`);
+      UI.showToast(`🚚 早班貨車已送達入庫：${deliveredSummary.join("、")}`);
     }
   },
 
@@ -1741,7 +1902,7 @@ const UI = {
     el.textContent = msg;
     el.classList.add("show");
     clearTimeout(this._t);
-    this._t = setTimeout(() => el.classList.remove("show"), 2600);
+    this._t = setTimeout(() => el.classList.remove("show"), 2800);
   },
 
   switchTab(tab) {
@@ -1767,6 +1928,7 @@ const UI = {
   updateHud() {
     const s = Game.state;
     const fac = Game.getFacilityStats();
+    const estDemand = Game.getEstimatedDemand();
     document.getElementById("ui-day").textContent = `第 ${s.day} 日・${Game.getWeekdayName()}`;
     document.getElementById("ui-weekend").style.display = Game.isWeekend() ? "inline-block" : "none";
     document.getElementById("ui-stores").textContent = `🏠 ${s.stores}間店`;
@@ -1775,9 +1937,21 @@ const UI = {
     cashEl.textContent = `$${s.cash.toLocaleString()}`;
     cashEl.className = "hud-val" + (s.cash < 800 ? " danger" : "");
 
-    document.getElementById("ui-today-rev").textContent = `$${Game.todayStats.revenue.toLocaleString()}`;
+    const demEl = document.getElementById("ui-est-demand");
+    demEl.textContent = `約 ${estDemand} 人`;
+    demEl.className = "hud-val " + (estDemand > fac.totalCapacity ? "danger" : "good");
+
     document.getElementById("ui-fixed-opex").textContent = `$${fac.fixedOpex.toLocaleString()}`;
     document.getElementById("ui-rep").textContent = `${s.reputation} / 100`;
+
+    const prepHint = document.getElementById("ui-prep-hint");
+    if (prepHint) {
+      if (estDemand > fac.totalCapacity) {
+        prepHint.innerHTML = `⚠️ 預計今日客流 <strong>${estDemand} 人</strong> 超過目前吧台承受力（${fac.totalCapacity}），洪峰期容易排爆流失！`;
+      } else {
+        prepHint.innerHTML = `預計今日客流約 <strong>${estDemand} 人</strong>｜吧台承受力 <strong>${fac.totalCapacity}</strong>（狀態良好，可隨時開舖）`;
+      }
+    }
   },
 
   renderStatusStrip() {
@@ -1797,7 +1971,7 @@ const UI = {
     });
 
     if (items.length === 0) {
-      items.push(`<span style="font-size:10px;color:#b8a89e;">今日訂購原材料將於明日開舖前送達，請留意冰箱容量上限</span>`);
+      items.push(`<span style="font-size:10px;color:#b8a89e;">隨營業日數增加，每日客流會持續成長，請適時升級高階咖啡機與冷庫</span>`);
     }
     strip.innerHTML = items.join("");
   },
@@ -1808,7 +1982,6 @@ const UI = {
     const storage = Game.getStorageStats();
     const capPct = Math.min(100, Math.round((storage.totalReserved / storage.totalCapacity) * 100));
 
-    // 頂部冰箱總容量進度條
     let html = `
       <div class="card" style="background:#f8fafc; border-color:#cbd5e1;">
         <div class="card-top">
@@ -1826,7 +1999,6 @@ const UI = {
       </div>
     `;
 
-    // 原材料採購卡片
     html += INGREDIENTS.map(ing => {
       if (ing.unlock_day > s.day) {
         return `<div class="card" style="opacity:0.55;">
@@ -1856,14 +2028,14 @@ const UI = {
           <div class="restock-row">
             <span style="font-size:11px;color:var(--text-muted);">預訂明日貨源：</span>
             <div class="buy-btns">
-              <button class="chip-btn" ${s.cash < unitCost || freeSpace < ing.space ? "disabled" : ""} onclick="Game.orderIngredientTomorrow('${ing.ing_id}', 5)">
+              <button class="chip-btn" ${s.cash < unitCost * 5 || freeSpace < ing.space * 5 ? "disabled" : ""} onclick="Game.orderIngredientTomorrow('${ing.ing_id}', 5)">
                 訂5份 ($${unitCost * 5})
               </button>
               <button class="chip-btn" ${s.cash < unitCost * 10 || freeSpace < ing.space * 10 ? "disabled" : ""} onclick="Game.orderIngredientTomorrow('${ing.ing_id}', 10)">
                 訂10份 ($${unitCost * 10})
               </button>
-              <button class="chip-btn" ${s.cash < unitCost * 20 || freeSpace < ing.space * 20 ? "disabled" : ""} onclick="Game.orderIngredientTomorrow('${ing.ing_id}', 20)">
-                訂20份 ($${unitCost * 20})
+              <button class="chip-btn" ${s.cash < unitCost * 25 || freeSpace < ing.space * 25 ? "disabled" : ""} onclick="Game.orderIngredientTomorrow('${ing.ing_id}', 25)">
+                訂25份 ($${unitCost * 25})
               </button>
             </div>
           </div>
@@ -1877,26 +2049,33 @@ const UI = {
   renderEquipTab() {
     const container = document.getElementById("tab-equip");
     const s = Game.state;
+    const slots = Game.getSlotStats();
     const nextStoreCost = Game.getNextStoreCost();
 
     let html = `
       <div class="card" style="background:#f5f9ff; border-color:#cfe0f5;">
         <div class="card-top">
           <span class="card-title">🏢 分店連鎖擴張（目前 ${s.stores} 間）</span>
-          <span class="badge badge-keep">客流 +80%/店</span>
+          <span class="badge badge-keep">客流 +85%｜機位翻倍</span>
         </div>
         <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;">
-          開分店可大幅提升客流量，但每日固定租金會增加 $${ConfigLoader.current.meta.base_daily_rent}/日。
+          每間店上限 <strong>${SLOTS_PER_STORE.EQUIP} 台吧台機</strong> ＋ <strong>${SLOTS_PER_STORE.FRIDGE} 台雪櫃</strong>。開分店可擴充機位並大幅提升全城客流。
         </div>
         <button class="action-btn secondary" ${s.cash < nextStoreCost ? "disabled" : ""} onclick="Game.openNewStoreNow()">
           開設第 ${s.stores + 1} 間分店（需現金 $${nextStoreCost.toLocaleString()}）
         </button>
       </div>
-      <div style="font-size:12px;font-weight:800;margin:10px 0 6px;color:var(--text-muted);">❄️ 冰箱與冷庫設備（增加原料存放上限）</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;font-weight:800;margin:10px 0 6px;color:var(--text-muted);">
+        <span>❄️ 冰箱與冷庫設備</span>
+        <span class="badge ${slots.usedFridgeSlots >= slots.maxFridgeSlots ? "badge-perish" : "badge-blue"}">
+          冷庫機位：${slots.usedFridgeSlots} / ${slots.maxFridgeSlots}
+        </span>
+      </div>
     `;
 
     html += FRIDGES.map(fr => {
       const count = (s.fridgesOwned && s.fridgesOwned[fr.fridge_id]) || 0;
+      const slotFull = slots.usedFridgeSlots >= slots.maxFridgeSlots;
       if (fr.unlock_day > s.day) {
         return `<div class="card" style="opacity:0.55;"><div class="card-title">🔒 ${fr.name}</div><div style="font-size:11px;color:var(--text-muted);">第 ${fr.unlock_day} 日開放採購</div></div>`;
       }
@@ -1907,22 +2086,34 @@ const UI = {
             <span class="badge badge-blue">已擁有 ${count} 台</span>
           </div>
           <div class="meta-line">
-            <span>增加庫存空間：<strong>+${fr.capacity} 格</strong></span>
-            <span>每日電費維護：<strong>+$${fr.daily_opex}/日</strong></span>
+            <span>佔 1 機位｜容量：<strong>+${fr.capacity} 格</strong></span>
+            <span>日維護費：<strong>+$${fr.daily_opex}/日</strong></span>
           </div>
-          <button class="action-btn secondary" ${s.cash < fr.buy_cost ? "disabled" : ""} onclick="Game.buyFridgeNow('${fr.fridge_id}')">
-            ${fr.buy_cost === 0 ? "免費添置基礎雪櫃" : `購置冷庫設備（$${fr.buy_cost.toLocaleString()}）`}
-          </button>
+          <div class="equip-btn-row">
+            <button class="action-btn secondary" ${s.cash < fr.buy_cost || slotFull ? "disabled" : ""} onclick="Game.buyFridgeNow('${fr.fridge_id}')">
+              ${slotFull ? "冷庫機位已滿（請先淘汰舊機）" : `購入冷庫（$${fr.buy_cost.toLocaleString()}）`}
+            </button>
+            ${count > 0 ? `<button class="btn-sell-mini" onclick="Game.sellFridgeNow('${fr.fridge_id}')">拆機騰位 +$${Math.round(fr.buy_cost * 0.5)}</button>` : ""}
+          </div>
         </div>
       `;
     }).join("");
 
-    html += `<div style="font-size:12px;font-weight:800;margin:12px 0 6px;color:var(--text-muted);">☕ 吧台製作設備（增加同時出餐速度）</div>`;
+    html += `
+      <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;font-weight:800;margin:12px 0 6px;color:var(--text-muted);">
+        <span>☕ 吧台製作設備（決定洪峰出餐速度）</span>
+        <span class="badge ${slots.usedEquipSlots >= slots.maxEquipSlots ? "badge-perish" : "badge-keep"}">
+          吧台機位：${slots.usedEquipSlots} / ${slots.maxEquipSlots}
+        </span>
+      </div>
+    `;
 
     html += ConfigLoader.current.equipment.map(eq => {
       const unlockDay = Number(eq.unlock_day);
       const count = s.equipmentOwned[eq.equip_id] || 0;
       const buyCost = Number(eq.buy_cost);
+      const slotFull = slots.usedEquipSlots >= slots.maxEquipSlots;
+      const speedMult = (Number(eq.daily_capacity) / 40).toFixed(1);
 
       if (unlockDay > s.day) {
         return `<div class="card" style="opacity:0.55;"><div class="card-title">🔒 ${eq.name}</div><div style="font-size:11px;color:var(--text-muted);">第 ${unlockDay} 日開放採購</div></div>`;
@@ -1935,12 +2126,15 @@ const UI = {
             <span class="badge badge-keep">吧台已有 ${count} 台</span>
           </div>
           <div class="meta-line">
-            <span>出餐速度：<strong>+${eq.daily_capacity} 產能</strong></span>
+            <span>出餐速度：<strong>${speedMult}x 速 (+${eq.daily_capacity} 承載)</strong></span>
             <span>日維護費：<strong>+$${eq.daily_opex}/日</strong></span>
           </div>
-          <button class="action-btn" ${s.cash < buyCost ? "disabled" : ""} onclick="Game.buyEquipmentNow('${eq.equip_id}')">
-            ${buyCost === 0 ? "免費添置備用機" : `立即購入並擺上吧台（$${buyCost.toLocaleString()}）`}
-          </button>
+          <div class="equip-btn-row">
+            <button class="action-btn" ${s.cash < buyCost || slotFull ? "disabled" : ""} onclick="Game.buyEquipmentNow('${eq.equip_id}')">
+              ${slotFull ? "吧台機位已滿（請先淘汰舊機）" : `購入擺上吧台（$${buyCost.toLocaleString()}）`}
+            </button>
+            ${count > 0 ? `<button class="btn-sell-mini" onclick="Game.sellEquipmentNow('${eq.equip_id}')">拆機騰位 +$${Math.round(buyCost * 0.5)}</button>` : ""}
+          </div>
         </div>
       `;
     }).join("");
@@ -1952,7 +2146,6 @@ const UI = {
     const container = document.getElementById("tab-ledger");
     const s = Game.state;
 
-    // 1. 累計單品銷售與毛利排行榜
     const statsList = Object.entries(s.productLifetimeStats || {}).map(([pid, item]) => ({
       pid,
       ...item
@@ -1993,7 +2186,6 @@ const UI = {
       `;
     }
 
-    // 2. 每日收市損益歷史
     const logs = s.historyLogs || [];
     const logsHtml = logs.length === 0
       ? `<div class="card" style="text-align:center;color:var(--text-muted);padding:16px;font-size:12px;">暫無每日打烊結算紀錄。</div>`
@@ -2041,7 +2233,7 @@ const UI = {
 
     this.openModal(`
       <h2 class="modal-title">☕ 白手起家：街角創業錄</h2>
-      <p style="font-size:12px;color:var(--text-muted);margin-top:0;">管理冰箱倉儲、預訂明日原材料、現點現做應付客流高峰：</p>
+      <p style="font-size:12px;color:var(--text-muted);margin-top:0;">客流將隨營業日數持續攀升，妥善配置有限機位與冷庫容量迎接洪峰考驗：</p>
       ${cardsHtml}
     `);
   },
@@ -2086,7 +2278,7 @@ const UI = {
         收市可用現金：<strong>$${Game.state.cash.toLocaleString()}</strong>｜店鋪口碑：<strong>${Game.state.reputation}/100</strong>
       </div>
       ${notesHtml}
-      <button class="action-btn" style="margin-top:12px;" onclick="Game.proceedAfterPnL()">接收明日貨源並進入下一日</button>
+      <button class="action-btn" style="margin-top:12px;" onclick="Game.enterAfterHoursPrep()">📦 關閉報表，盤點並預訂明日貨源</button>
     `);
   },
 
@@ -2103,7 +2295,7 @@ const UI = {
         • 附加負面狀態：<strong>信貸緊縮（原料成本 +10%）</strong><br>
         • 剩餘救命融資次數：<strong>${loansLeft} 次</strong>（再次跌穿 $0 將正式破產）
       </div>
-      <button class="action-btn" onclick="Game.advanceToNextDay()">背水一戰，繼續營業</button>
+      <button class="action-btn" onclick="UI.closeModal(); Game.showAfterHoursOverlay();">背水一戰，進入盤點補貨</button>
     `);
   },
 
@@ -2129,7 +2321,7 @@ const UI = {
       <div class="pnl-row"><span>通關所用日數</span><strong>第 ${s.day} 日</strong></div>
       <div class="pnl-row"><span>最終可用現金</span><strong>$${s.cash.toLocaleString()}</strong></div>
       <div class="pnl-row"><span>店鋪口碑</span><strong>${s.reputation} / 100</strong></div>
-      <button class="action-btn" style="margin-top:12px;" onclick="Game.advanceToNextDay()">繼續留低經營</button>
+      <button class="action-btn" style="margin-top:12px;" onclick="UI.closeModal(); Game.showAfterHoursOverlay();">繼續留低經營</button>
       <button class="action-btn secondary" style="margin-top:8px;" onclick="UI.openDifficultyModal()">開新難度挑戰</button>
     `);
   },
@@ -2196,6 +2388,7 @@ const UI = {
     const loaded = SaveManager.importCode(document.getElementById("input-import-code").value);
     if (loaded) {
       Game.state = loaded;
+      Game.sanitizeLegacySlots();
       UI.closeModal();
       Game.enterMorningPrep(false);
       UI.showToast("存檔還原成功！");
